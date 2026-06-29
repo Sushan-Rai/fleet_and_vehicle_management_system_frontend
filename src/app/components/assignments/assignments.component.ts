@@ -81,7 +81,7 @@ export class AssignmentsComponent implements OnInit, OnDestroy {
   public readonly availableVehicles = computed(() => {
     const startLoc = this.selectedStartLocationId();
     if (!startLoc) return [];
-    return this.vehicles().filter(v => v.status === 'Active' && v.routeLocationId === startLoc);
+    return this.vehicles().filter(v => v.status === 'Active' && v.routeLocationId?.toLowerCase() === startLoc.toLowerCase());
   });
 
   public readonly transitVehiclesCount = computed(() => {

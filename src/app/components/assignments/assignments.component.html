@@ -143,17 +143,17 @@
               <td class="p-4 text-right">
                 <div class="flex justify-end gap-2" (click)="$event.stopPropagation()">
                   @if (item.status === 'Scheduled') {
-                  <button (click)="accept(item)"
-                    class="h-8 px-3 bg-secondary text-on-secondary hover:brightness-110 text-xs font-bold rounded flex items-center gap-1 transition-all active:scale-95">
+                  <button (click)="accept(item)" [disabled]="loading()"
+                    class="h-8 px-3 bg-secondary text-on-secondary hover:brightness-110 text-xs font-bold rounded flex items-center gap-1 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none">
                     <span class="material-symbols-outlined text-xs" data-icon="done">done</span> Accept
                   </button>
-                  <button (click)="reject(item)"
-                    class="h-8 px-3 border border-error text-error hover:bg-error/5 text-xs font-bold rounded flex items-center gap-1 transition-all active:scale-95">
+                  <button (click)="reject(item)" [disabled]="loading()"
+                    class="h-8 px-3 border border-error text-error hover:bg-error/5 text-xs font-bold rounded flex items-center gap-1 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none">
                     <span class="material-symbols-outlined text-xs" data-icon="close">close</span> Reject
                   </button>
                   } @else {
-                  <button (click)="arrive(item)"
-                    class="h-8 px-3 bg-teal-600 text-white hover:bg-teal-700 text-xs font-bold rounded flex items-center gap-1 transition-all active:scale-95">
+                  <button (click)="arrive(item)" [disabled]="loading()"
+                    class="h-8 px-3 bg-teal-600 text-white hover:bg-teal-700 text-xs font-bold rounded flex items-center gap-1 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none">
                     <span class="material-symbols-outlined text-xs" data-icon="sports_motorsports">sports_motorsports</span> Arrived
                   </button>
                   <a [routerLink]="['/fuel-logs']" [queryParams]="{ vehicleId: item.vehicleId, open: 'true' }"

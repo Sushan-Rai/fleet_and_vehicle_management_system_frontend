@@ -48,3 +48,18 @@ export const selectEnrichedVehicles = createSelector(
     });
   }
 );
+
+export const selectSearchTerm = createSelector(
+  selectVehiclesState,
+  (state) => state.searchTerm || ''
+);
+
+export const selectSelectedStatus = createSelector(
+  selectVehiclesState,
+  (state) => state.selectedStatus || ''
+);
+
+export const selectSelectedCategory = createSelector(
+  selectVehiclesState,
+  (state) => state.selectedCategory || ''
+);

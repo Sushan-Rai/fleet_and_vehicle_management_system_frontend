@@ -54,7 +54,14 @@ export class FuelLogsComponent implements OnInit {
     if (this.isFleetManager()) {
       const userLocId = this.authService.currentUser()?.routeLocationId;
       if (userLocId) {
-        return list.filter(v => v.routeLocationId === userLocId);
+        return list.filter(v => v.routeLocationId?.toLowerCase() === userLocId.toLowerCase());
+      } else {
+        return [];
+      }
+    } else if (this.isDriver()) {
+      const userLocId = this.authService.currentUser()?.routeLocationId;
+      if (userLocId) {
+        return list.filter(v => v.routeLocationId?.toLowerCase() === userLocId.toLowerCase());
       }
     }
     return list;
@@ -147,7 +154,7 @@ export class FuelLogsComponent implements OnInit {
       const vehicle = this.vehicles().find(v => v.id === vehicleId);
       const driver = this.drivers().find(d => d.id === driverId);
       if (vehicle && driver) {
-        if (vehicle.routeLocationId !== driver.currentLocationId) {
+        if (vehicle.routeLocationId?.toLowerCase() !== driver.currentLocationId?.toLowerCase()) {
           errors['locationMismatch'] = true;
         }
       }

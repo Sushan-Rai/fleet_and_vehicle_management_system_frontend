@@ -8,6 +8,9 @@ export interface VehiclesState {
   totalCount: number;
   loading: boolean;
   error: any;
+  searchTerm: string;
+  selectedStatus: string;
+  selectedCategory: string;
 }
 
 export const initialVehiclesState: VehiclesState = {
@@ -16,6 +19,9 @@ export const initialVehiclesState: VehiclesState = {
   totalCount: 0,
   loading: false,
   error: null,
+  searchTerm: '',
+  selectedStatus: '',
+  selectedCategory: '',
 };
 
 export const vehiclesReducer = createReducer(
@@ -69,5 +75,19 @@ export const vehiclesReducer = createReducer(
     ...state,
     loading: false,
     error,
+  })),
+
+  // Filter Updates
+  on(VehiclesActions.updateSearchTerm, (state, { searchTerm }) => ({
+    ...state,
+    searchTerm
+  })),
+  on(VehiclesActions.updateSelectedStatus, (state, { selectedStatus }) => ({
+    ...state,
+    selectedStatus
+  })),
+  on(VehiclesActions.updateSelectedCategory, (state, { selectedCategory }) => ({
+    ...state,
+    selectedCategory
   }))
 );

@@ -53,3 +53,19 @@ export const addVehicleFailure = createAction(
   '[Vehicles] Add Vehicle Failure',
   props<{ error: any }>()
 );
+
+// Filter Actions
+export const updateSearchTerm = createAction(
+  '[Vehicles] Update Search Term',
+  props<{ searchTerm: string }>()
+);
+
+export const updateSelectedStatus = createAction(
+  '[Vehicles] Update Selected Status',
+  props<{ selectedStatus: string }>()
+);
+
+export const updateSelectedCategory = createAction(
+  '[Vehicles] Update Selected Category',
+  props<{ selectedCategory: string }>()
+);

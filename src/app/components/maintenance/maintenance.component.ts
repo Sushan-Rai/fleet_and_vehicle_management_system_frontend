@@ -47,7 +47,7 @@ export class MaintenanceComponent implements OnInit {
     if (this.isFleetManager()) {
       const userLocId = this.authService.currentUser()?.routeLocationId;
       if (userLocId) {
-        return list.filter(v => v.routeLocationId === userLocId);
+        return list.filter(v => v.routeLocationId?.toLowerCase() === userLocId.toLowerCase());
       }
     }
     return list;

@@ -14,7 +14,10 @@ import {
   selectEnrichedVehicles,
   selectVehicleModelsList,
   selectVehiclesLoading,
-  selectVehiclesError
+  selectVehiclesError,
+  selectSearchTerm,
+  selectSelectedStatus,
+  selectSelectedCategory
 } from '../../store/vehicles/vehicles.selectors';
 import * as VehiclesActions from '../../store/vehicles/vehicles.actions';
 import { VehicleInventoryItem, VehicleRequest, VehicleModel, VehicleCategory, VehicleModelRequest, VehicleCategoryRequest } from '../../models/vehicle.model';
@@ -44,9 +47,9 @@ export class VehiclesComponent implements OnInit, OnDestroy {
   public readonly isAddModalOpen = signal<boolean>(false);
   public readonly isModelModalOpen = signal<boolean>(false);
   public readonly isCategoryModalOpen = signal<boolean>(false);
-  public readonly searchTerm = signal<string>('');
-  public readonly selectedStatus = signal<string>('');
-  public readonly selectedCategory = signal<string>('');
+  public readonly searchTerm = toSignal(this.store.select(selectSearchTerm), { initialValue: '' });
+  public readonly selectedStatus = toSignal(this.store.select(selectSelectedStatus), { initialValue: '' });
+  public readonly selectedCategory = toSignal(this.store.select(selectSelectedCategory), { initialValue: '' });
   public readonly addErrorMessage = signal<string>('');
   public readonly modelErrorMessage = signal<string>('');
   public readonly categoryErrorMessage = signal<string>('');
@@ -161,13 +164,9 @@ export class VehiclesComponent implements OnInit, OnDestroy {
   });
 
   public ngOnInit(): void {
-    // Dispatch store loading actions only if not already loaded
-    if (this.storeVehicles().length === 0) {
-      this.store.dispatch(VehiclesActions.loadVehicles({ filters: { PageSize: 1000 } }));
-    }
-    if (this.models().length === 0) {
-      this.store.dispatch(VehiclesActions.loadVehicleModels());
-    }
+    // Dispatch store loading actions
+    this.store.dispatch(VehiclesActions.loadVehicles({ filters: { PageSize: 1000 } }));
+    this.store.dispatch(VehiclesActions.loadVehicleModels());
     if (this.allCategories().length === 0) {
       this.loadCategories();
     }
@@ -236,7 +235,25 @@ export class VehiclesComponent implements OnInit, OnDestroy {
    * Sets the active status filter chip
    */
   public selectStatusFilter(status: string): void {
-    this.selectedStatus.set(status);
+    this.updateStatus(status);
+  }
+
+  public updateCategory(category: string): void {
+    this.store.dispatch(VehiclesActions.updateSelectedCategory({ selectedCategory: category }));
+  }
+
+  public updateStatus(status: string): void {
+    this.store.dispatch(VehiclesActions.updateSelectedStatus({ selectedStatus: status }));
+  }
+
+  public updateSearchTerm(term: string): void {
+    this.store.dispatch(VehiclesActions.updateSearchTerm({ searchTerm: term }));
+  }
+
+  public clearFilters(): void {
+    this.store.dispatch(VehiclesActions.updateSearchTerm({ searchTerm: '' }));
+    this.store.dispatch(VehiclesActions.updateSelectedStatus({ selectedStatus: '' }));
+    this.store.dispatch(VehiclesActions.updateSelectedCategory({ selectedCategory: '' }));
   }
 
   /**

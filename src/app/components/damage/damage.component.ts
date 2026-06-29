@@ -31,6 +31,19 @@ export class DamageComponent implements OnInit {
 
   public readonly isDriver = computed(() => this.authService.userRole() === 'Driver');
 
+  public readonly filteredVehicles = computed(() => {
+    const list = this.vehicles();
+    if (this.isDriver()) {
+      const userLocId = this.authService.currentUser()?.routeLocationId;
+      if (userLocId) {
+        return list.filter(v => v.routeLocationId?.toLowerCase() === userLocId.toLowerCase());
+      } else {
+        return [];
+      }
+    }
+    return list;
+  });
+
   public ngOnInit(): void {
     const userRole = this.authService.userRole();
     const currentDriverId = userRole === 'Driver' ? (this.authService.currentUser()?.driverId || '') : '';

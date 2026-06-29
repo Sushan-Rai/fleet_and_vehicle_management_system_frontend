@@ -10,7 +10,7 @@ import { VehiclesComponent } from './vehicles.component';
 import { AuthService } from '../../services/auth.service';
 import { VehicleService } from '../../services/vehicle.service';
 import * as VehiclesActions from '../../store/vehicles/vehicles.actions';
-import { selectEnrichedVehicles, selectVehicleModelsList } from '../../store/vehicles/vehicles.selectors';
+import { selectEnrichedVehicles, selectVehicleModelsList, selectSearchTerm, selectSelectedStatus, selectSelectedCategory } from '../../store/vehicles/vehicles.selectors';
 
 describe('VehiclesComponent', () => {
   let component: VehiclesComponent;
@@ -120,18 +120,30 @@ describe('VehiclesComponent', () => {
   });
 
   it('should filter items by search term', () => {
-    component.searchTerm.set('KA01');
+    store.overrideSelector(selectSearchTerm, 'KA01');
+    store.overrideSelector(selectSelectedStatus, '');
+    store.overrideSelector(selectSelectedCategory, '');
+    store.refreshState();
+    fixture.detectChanges();
     expect(component.filteredVehicles().length).toBe(1);
 
-    component.searchTerm.set('NonExistent');
+    store.overrideSelector(selectSearchTerm, 'NonExistent');
+    store.refreshState();
+    fixture.detectChanges();
     expect(component.filteredVehicles().length).toBe(0);
   });
 
   it('should filter items by status', () => {
-    component.selectedStatus.set('InTransit');
+    store.overrideSelector(selectSearchTerm, '');
+    store.overrideSelector(selectSelectedStatus, 'InTransit');
+    store.overrideSelector(selectSelectedCategory, '');
+    store.refreshState();
+    fixture.detectChanges();
     expect(component.filteredVehicles().length).toBe(1);
 
-    component.selectedStatus.set('Active');
+    store.overrideSelector(selectSelectedStatus, 'Active');
+    store.refreshState();
+    fixture.detectChanges();
     expect(component.filteredVehicles().length).toBe(0);
   });
 

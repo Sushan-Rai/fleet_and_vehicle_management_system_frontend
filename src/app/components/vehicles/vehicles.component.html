@@ -99,7 +99,7 @@
       <span class="font-label-caps text-label-caps text-on-surface-variant">Filters</span>
     </div>
     <div class="flex-1 min-w-[150px]">
-      <select [value]="selectedCategory()" (change)="selectedCategory.set($any($event.target).value)"
+      <select [value]="selectedCategory()" (change)="updateCategory($any($event.target).value)"
         class="w-full h-9 bg-surface-container-low border border-outline-variant/30 rounded px-3 font-body-md text-body-md focus:ring-2 focus:ring-secondary-container outline-none">
         <option value="">All Categories</option>
         @for (cat of categories(); track cat) {
@@ -108,7 +108,7 @@
       </select>
     </div>
     <div class="flex-1 min-w-[150px]">
-      <select [value]="selectedStatus()" (change)="selectedStatus.set($any($event.target).value)"
+      <select [value]="selectedStatus()" (change)="updateStatus($any($event.target).value)"
         class="w-full h-9 bg-surface-container-low border border-outline-variant/30 rounded px-3 font-body-md text-body-md focus:ring-2 focus:ring-secondary-container outline-none">
         <option value="">All Statuses</option>
         <option value="Active">Available</option>
@@ -120,11 +120,11 @@
       <span
         class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px]"
         data-icon="search">search</span>
-      <input [value]="searchTerm()" (input)="searchTerm.set($any($event.target).value)"
+      <input [value]="searchTerm()" (input)="updateSearchTerm($any($event.target).value)"
         class="w-full h-9 pl-10 pr-4 bg-surface-container-low border border-outline-variant/30 rounded font-body-md text-body-md focus:ring-2 focus:ring-secondary-container outline-none"
         placeholder="Filter by Registration" type="text" />
     </div>
-    <button (click)="searchTerm.set(''); selectedStatus.set(''); selectedCategory.set('');"
+    <button (click)="clearFilters()"
       class="h-9 px-4 text-on-surface-variant hover:text-primary hover:bg-surface-variant transition-colors font-label-caps text-label-caps rounded">
       Clear All
     </button>
@@ -135,7 +135,7 @@
     <div class="relative">
       <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant"
         data-icon="search">search</span>
-      <input [value]="searchTerm()" (input)="searchTerm.set($any($event.target).value)"
+      <input [value]="searchTerm()" (input)="updateSearchTerm($any($event.target).value)"
         class="w-full h-11 pl-10 pr-4 bg-surface-container-lowest border border-outline-variant/30 rounded-xl focus:ring-2 focus:ring-secondary outline-none text-body-md"
         placeholder="Filter by Registration" type="text" />
     </div>
