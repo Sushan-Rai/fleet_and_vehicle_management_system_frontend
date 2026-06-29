@@ -1,13 +1,126 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="light">
 <head>
   <meta charset="utf-8">
-  <title>FleetManagementSystem</title>
+  <title>FleetControl</title>
   <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+                  "primary-fixed-dim": "#b7c8de",
+                  "secondary-fixed-dim": "#adc6ff",
+                  "primary": "#041627",
+                  "secondary-container": "#0070eb",
+                  "on-secondary-container": "#fefcff",
+                  "on-tertiary": "#ffffff",
+                  "secondary-fixed": "#d8e2ff",
+                  "surface-container-lowest": "#ffffff",
+                  "on-tertiary-fixed": "#281802",
+                  "on-primary-fixed-variant": "#38485a",
+                  "on-tertiary-fixed-variant": "#584326",
+                  "on-background": "#1b1c1d",
+                  "on-surface": "#1b1c1d",
+                  "tertiary-fixed-dim": "#e1c29b",
+                  "surface-variant": "#e4e2e3",
+                  "surface-container-highest": "#e4e2e3",
+                  "surface-bright": "#fbf9fa",
+                  "on-secondary": "#ffffff",
+                  "surface-dim": "#dbd9db",
+                  "background": "#fbf9fa",
+                  "error": "#ba1a1a",
+                  "secondary": "#0058bc",
+                  "on-secondary-fixed": "#001a41",
+                  "on-primary-container": "#8192a7",
+                  "surface": "#fbf9fa",
+                  "surface-lowest": "#ffffff",
+                  "inverse-surface": "#303032",
+                  "surface-container-high": "#e9e7e9",
+                  "on-surface-variant": "#44474c",
+                  "surface-tint": "#4f6073",
+                  "surface-container": "#efedef",
+                  "outline": "#74777d",
+                  "on-error-container": "#93000a",
+                  "inverse-primary": "#b7c8de",
+                  "tertiary-container": "#38260b",
+                  "tertiary": "#211200",
+                  "on-primary": "#ffffff",
+                  "outline-variant": "#c4c6cd",
+                  "on-primary-fixed": "#0b1d2d",
+                  "primary-fixed": "#d2e4fb",
+                  "error-container": "#ffdad6",
+                  "primary-container": "#1a2b3c",
+                  "on-error": "#ffffff",
+                  "inverse-on-surface": "#f2f0f2",
+                  "on-secondary-fixed-variant": "#004493",
+                  "tertiary-fixed": "#feddb5",
+                  "on-tertiary-container": "#a88c69",
+                  "surface-container-low": "#f5f3f4"
+          },
+          "borderRadius": {
+                  "DEFAULT": "0.125rem",
+                  "lg": "0.25rem",
+                  "xl": "0.5rem",
+                  "full": "0.75rem"
+          },
+          "spacing": {
+                  "stack-gap": "12px",
+                  "unit": "4px",
+                  "grid-gutter": "16px",
+                  "table-cell-padding": "8px 12px",
+                  "container-padding": "24px"
+          },
+          "fontFamily": {
+                  "title-sm": ["Inter"],
+                  "tabular-nums": ["Inter"],
+                  "label-caps": ["Inter"],
+                  "body-sm": ["Inter"],
+                  "body-md": ["Inter"],
+                  "headline-md": ["Inter"],
+                  "display-lg": ["Inter"]
+          },
+          "fontSize": {
+                  "title-sm": ["18px", {"lineHeight": "24px", "fontWeight": "600"}],
+                  "tabular-nums": ["14px", {"lineHeight": "20px", "fontWeight": "500"}],
+                  "label-caps": ["11px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                  "body-sm": ["13px", {"lineHeight": "18px", "fontWeight": "400"}],
+                  "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                  "headline-md": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                  "display-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}]
+          }
+        },
+      },
+    }
+  </script>
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        display: inline-block;
+        vertical-align: middle;
+    }
+    .login-card {
+        box-shadow: 0px 1px 3px rgba(0,0,0,0.05);
+    }
+    .active-ring:focus-within {
+        ring: 2px;
+        ring-color: #0070eb;
+    }
+    .form-focus-ring:focus {
+        outline: none;
+        border-color: #0058bc;
+        box-shadow: 0 0 0 1px #0058bc;
+    }
+  </style>
 </head>
-<body>
+<body class="bg-surface text-on-surface min-h-screen flex flex-col">
   <app-root></app-root>
 </body>
 </html>

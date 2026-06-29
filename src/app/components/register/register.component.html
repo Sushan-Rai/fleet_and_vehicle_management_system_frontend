@@ -1,0 +1,295 @@
+<!-- Header / TopNavBar -->
+<header class="fixed top-0 w-full bg-surface dark:bg-primary border-b border-outline-variant dark:border-outline shadow-sm flex justify-between items-center px-container-padding h-14 z-50">
+  <div class="flex items-center gap-2">
+    <span class="font-display-lg text-display-lg font-bold text-primary dark:text-primary-fixed">FleetControl</span>
+  </div>
+  <div class="hidden md:flex items-center gap-8">
+    <div class="flex items-center gap-4">
+      <a class="text-secondary dark:text-secondary-fixed font-semibold font-body-md text-body-md cursor-pointer active:scale-95" [routerLink]="['/login']">Sign In</a>
+    </div>
+  </div>
+</header>
+
+<main class="flex-grow flex items-center justify-center pt-20 pb-12 px-6 min-h-[calc(100vh-3.5rem)]">
+  <div class="w-full max-w-[1100px] grid grid-cols-1 md:grid-cols-2 bg-white rounded-xl shadow-lg overflow-hidden border border-outline-variant">
+    <!-- Left Side: Visual/Context -->
+    <div class="relative hidden md:block bg-primary overflow-hidden">
+      <div class="absolute inset-0 opacity-40">
+        <img class="w-full h-full object-cover" 
+             alt="A professional aerial view of a large logistics hub at dusk, with organized rows of white semi-trucks and trailers." 
+             src="https://lh3.googleusercontent.com/aida-public/AB6AXuA4pV73gv18nfHUbooKTva31VlEFDHG1kX-RoisKoiySWXoYE0vFa1J3fTm45esIVfu6vJwL-BzOD-urue92-LCXEUt7XJ3SXGtYXfmxeZEBafudDVlvvbCgtg8P5QH-9zvIKv7-GPuiXs3z0d_H5l24RkR26UcRNruwMuOTbyC6llMpFV3VwR0Er-RGr-zYk-erASUKCDoglToncMRYduJ0yad9fVs_ZfiLcHfhBpSbpmBD5CAhshxtOaotexz2funwwexcCoB-Ssv"/>
+      </div>
+      <div class="relative z-10 p-12 h-full flex flex-col justify-between text-white">
+        <div>
+          <h2 class="font-display-lg text-display-lg font-bold mb-6">Drive the future of logistics.</h2>
+          <p class="font-body-md text-body-md text-primary-fixed-dim max-w-md">Join over 15,000 fleet managers and drivers optimizing routes and reducing operational overhead with real-time telemetry.</p>
+        </div>
+        <div class="space-y-6">
+          <div class="flex items-start gap-4">
+            <div class="p-2 bg-secondary rounded flex items-center justify-center">
+              <span class="material-symbols-outlined text-white">speed</span>
+            </div>
+            <div>
+              <h4 class="font-title-sm text-title-sm">99.9% Uptime</h4>
+              <p class="font-body-sm text-body-sm text-primary-fixed-dim">Mission-critical reliability for your entire fleet.</p>
+            </div>
+          </div>
+          <div class="flex items-start gap-4">
+            <div class="p-2 bg-secondary rounded flex items-center justify-center">
+              <span class="material-symbols-outlined text-white">security</span>
+            </div>
+            <div>
+              <h4 class="font-title-sm text-title-sm">Enterprise Security</h4>
+              <p class="font-body-sm text-body-sm text-primary-fixed-dim">Compliance-ready data encryption and protection.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Side: Signup Form -->
+    <div class="p-8 md:p-12 flex flex-col justify-center">
+      <div class="mb-6">
+        <h1 class="font-headline-md text-headline-md text-primary mb-2">Create Account</h1>
+        <p class="font-body-md text-body-md text-on-surface-variant">Get started with FleetControl management platform.</p>
+      </div>
+
+      <!-- Error alert -->
+      @if (errorMessage()) {
+        <div class="mb-4 p-3 bg-error-container border-l-4 border-error text-on-error-container text-body-sm rounded flex items-start gap-2.5">
+          <span class="material-symbols-outlined text-error text-[20px] mt-0.5">error</span>
+          <span>{{ errorMessage() }}</span>
+        </div>
+      }
+
+      <form class="space-y-4" (submit)="onRegister(); $event.preventDefault();">
+        <!-- Role Toggle -->
+        <div class="space-y-2">
+          <label class="font-label-caps text-label-caps text-on-surface-variant">REGISTRATION ROLE</label>
+          <div class="grid grid-cols-2 p-1 bg-surface-container rounded-lg border border-outline-variant">
+            <button class="py-2 text-center rounded font-body-sm text-body-sm transition-all" 
+                    [class.bg-white]="role() === 'Driver'"
+                    [class.text-secondary]="role() === 'Driver'"
+                    [class.shadow-sm]="role() === 'Driver'"
+                    [class.font-semibold]="role() === 'Driver'"
+                    [class.text-on-surface-variant]="role() !== 'Driver'"
+                    [class.hover:bg-surface-container-low]="role() !== 'Driver'"
+                    (click)="setRole('Driver')" 
+                    type="button">
+              Driver
+            </button>
+            <button class="py-2 text-center rounded font-body-sm text-body-sm transition-all" 
+                    [class.bg-white]="role() === 'FleetManager'"
+                    [class.text-secondary]="role() === 'FleetManager'"
+                    [class.shadow-sm]="role() === 'FleetManager'"
+                    [class.font-semibold]="role() === 'FleetManager'"
+                    [class.text-on-surface-variant]="role() !== 'FleetManager'"
+                    [class.hover:bg-surface-container-low]="role() !== 'FleetManager'"
+                    (click)="setRole('FleetManager')" 
+                    type="button">
+              Manager
+            </button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 gap-4">
+          <!-- Name Row (Split into First and Last Name Grid) -->
+          <div class="grid grid-cols-2 gap-4">
+            <div class="space-y-1">
+              <label class="font-label-caps text-label-caps text-on-surface-variant uppercase" for="first_name">First Name</label>
+              <div class="relative">
+                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]">person</span>
+                <input [(ngModel)]="firstName" 
+                       name="firstName"
+                       class="w-full h-9 pl-10 border border-outline-variant rounded bg-surface-container-lowest text-body-md font-body-md form-focus-ring" 
+                       id="first_name" 
+                       placeholder="John" 
+                       type="text" 
+                       required
+                       [disabled]="isLoading()"/>
+              </div>
+            </div>
+            <div class="space-y-1">
+              <label class="font-label-caps text-label-caps text-on-surface-variant uppercase" for="last_name">Last Name</label>
+              <div class="relative">
+                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]">person</span>
+                <input [(ngModel)]="lastName" 
+                       name="lastName"
+                       class="w-full h-9 pl-10 border border-outline-variant rounded bg-surface-container-lowest text-body-md font-body-md form-focus-ring" 
+                       id="last_name" 
+                       placeholder="Doe" 
+                       type="text" 
+                       required
+                       [disabled]="isLoading()"/>
+              </div>
+            </div>
+          </div>
+
+          <!-- Corporate Email -->
+          <div class="space-y-1">
+            <label class="font-label-caps text-label-caps text-on-surface-variant uppercase" for="email">Corporate Email</label>
+            <div class="relative">
+              <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]">mail</span>
+              <input [(ngModel)]="email" 
+                     name="email"
+                     class="w-full h-9 pl-10 border border-outline-variant rounded bg-surface-container-lowest text-body-md font-body-md form-focus-ring" 
+                     id="email" 
+                     placeholder="john.doe@company.com" 
+                     type="email" 
+                     required
+                     [disabled]="isLoading()"/>
+            </div>
+          </div>
+
+          <!-- Password -->
+          <div class="space-y-1">
+            <label class="font-label-caps text-label-caps text-on-surface-variant uppercase" for="password">Password</label>
+            <div class="relative">
+              <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]">lock</span>
+              <input [(ngModel)]="password" 
+                     name="password"
+                     class="w-full h-9 pl-10 pr-10 border border-outline-variant rounded bg-surface-container-lowest text-body-md font-body-md form-focus-ring" 
+                     id="password" 
+                     placeholder="••••••••" 
+                     [type]="showPassword() ? 'text' : 'password'" 
+                     required
+                     [disabled]="isLoading()"/>
+              <button class="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-primary" 
+                      type="button"
+                      (click)="showPassword.set(!showPassword())">
+                <span class="material-symbols-outlined text-[20px]">{{ showPassword() ? 'visibility_off' : 'visibility' }}</span>
+              </button>
+            </div>
+
+            <!-- Real-time Password Checklist -->
+            @if (password().length > 0) {
+              <div class="mt-2 p-2.5 bg-surface-container rounded border border-outline-variant text-[11px] space-y-1">
+                <span class="font-label-caps text-on-surface-variant uppercase block mb-1">Password Requirements:</span>
+                <div class="grid grid-cols-2 gap-x-2 gap-y-0.5">
+                  <div class="flex items-center gap-1.5" [class.text-emerald-600]="hasMinLength()" [class.text-outline]="!hasMinLength()">
+                    <span class="material-symbols-outlined text-[14px] font-bold">{{ hasMinLength() ? 'done' : 'circle' }}</span>
+                    <span>8-32 Characters</span>
+                  </div>
+                  <div class="flex items-center gap-1.5" [class.text-emerald-600]="hasUppercase()" [class.text-outline]="!hasUppercase()">
+                    <span class="material-symbols-outlined text-[14px] font-bold">{{ hasUppercase() ? 'done' : 'circle' }}</span>
+                    <span>1 Uppercase Letter</span>
+                  </div>
+                  <div class="flex items-center gap-1.5" [class.text-emerald-600]="hasLowercase()" [class.text-outline]="!hasLowercase()">
+                    <span class="material-symbols-outlined text-[14px] font-bold">{{ hasLowercase() ? 'done' : 'circle' }}</span>
+                    <span>1 Lowercase Letter</span>
+                  </div>
+                  <div class="flex items-center gap-1.5" [class.text-emerald-600]="hasDigit()" [class.text-outline]="!hasDigit()">
+                    <span class="material-symbols-outlined text-[14px] font-bold">{{ hasDigit() ? 'done' : 'circle' }}</span>
+                    <span>1 Number</span>
+                  </div>
+                  <div class="flex items-center gap-1.5" [class.text-emerald-600]="hasSpecial()" [class.text-outline]="!hasSpecial()">
+                    <span class="material-symbols-outlined text-[14px] font-bold">{{ hasSpecial() ? 'done' : 'circle' }}</span>
+                    <span>1 Special Character</span>
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+
+          <!-- CDL / License Number (Conditional) -->
+          @if (role() === 'Driver') {
+            <div class="space-y-1 transition-all duration-300">
+              <label class="font-label-caps text-label-caps text-on-surface-variant uppercase" for="license">CDL / License Number</label>
+              <div class="relative">
+                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]">badge</span>
+                <input [(ngModel)]="licenseNumber" 
+                       name="licenseNumber"
+                       class="w-full h-9 pl-10 border border-outline-variant rounded bg-surface-container-lowest text-body-md font-body-md form-focus-ring" 
+                       id="license" 
+                       placeholder="AB12345678" 
+                       type="text" 
+                       required
+                       [disabled]="isLoading()"/>
+              </div>
+            </div>
+          }
+
+          <!-- Location Selection -->
+          <div class="space-y-1">
+            <label class="font-label-caps text-label-caps text-on-surface-variant uppercase" for="location">Location / Terminal</label>
+            <div class="relative">
+              <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]">location_on</span>
+              <select [(ngModel)]="selectedLocationId" 
+                      name="selectedLocationId"
+                      class="w-full h-9 pl-10 pr-10 border border-outline-variant rounded bg-surface-container-lowest text-body-md font-body-md form-focus-ring appearance-none" 
+                      id="location" 
+                      required
+                      [disabled]="isLoading() || isLocationsLoading()">
+                <option value="" disabled selected>
+                  {{ isLocationsLoading() ? 'Loading locations...' : 'Select location / terminal' }}
+                </option>
+                @for (loc of activeLocations(); track loc.id) {
+                  <option [value]="loc.id">{{ loc.location }}</option>
+                }
+              </select>
+              <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[24px] pointer-events-none">arrow_drop_down</span>
+            </div>
+          </div>
+        </div>
+
+        <button type="submit" 
+                [disabled]="isLoading()"
+                class="w-full bg-secondary hover:bg-opacity-90 disabled:opacity-50 text-white font-title-sm text-title-sm h-10 rounded transition-all active:scale-[0.98] mt-4 flex items-center justify-center gap-2">
+          @if (isLoading()) {
+            <span class="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full"></span>
+            Registering...
+          } @else {
+            Register
+          }
+        </button>
+
+        <div class="text-center pt-4">
+          <p class="font-body-sm text-body-sm text-on-surface-variant">
+            Already have an account? <a class="text-secondary font-semibold hover:underline" [routerLink]="['/login']">Sign In</a>
+          </p>
+        </div>
+      </form>
+    </div>
+  </div>
+</main>
+
+<!-- Registration Pending Admin Approval Success Modal -->
+@if (showSuccessModal()) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+    <div class="bg-white rounded-lg shadow-xl max-w-md w-full border border-outline-variant overflow-hidden">
+      <div class="px-6 py-4 bg-primary text-white flex justify-between items-center">
+        <h3 class="font-title-sm text-title-sm font-semibold flex items-center gap-2">
+          <span class="material-symbols-outlined text-secondary-fixed">assignment_turned_in</span>
+          Registration Complete
+        </h3>
+      </div>
+      <div class="p-6 text-center space-y-4">
+        <div class="w-16 h-16 bg-secondary-fixed text-secondary rounded-full flex items-center justify-center mx-auto shadow-sm">
+          <span class="material-symbols-outlined text-[36px] font-bold">check</span>
+        </div>
+        
+        <h4 class="font-headline-md text-[20px] text-primary font-bold">Pending Administrator Approval</h4>
+        
+        <p class="font-body-md text-body-md text-on-surface-variant">
+          Thank you for registering with FleetControl. Your account request as a <strong class="text-secondary">{{ role() }}</strong> has been submitted successfully.
+        </p>
+        
+        <p class="font-body-sm text-body-sm text-outline">
+          To maintain enterprise compliance standards, an administrator must approve your credentials before you can log in. You will receive access once approved.
+        </p>
+
+        <button (click)="navigateToLogin()" class="w-full h-11 bg-primary text-on-primary font-body-md font-semibold rounded hover:bg-primary-container active:scale-[0.98] transition-all mt-4">
+          Return to Login
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Footer -->
+<footer class="bg-surface-container-highest dark:bg-primary border-t border-outline-variant dark:border-outline flex flex-col md:flex-row justify-between items-center px-container-padding py-8 w-full">
+  <div class="flex flex-col items-center md:items-start mb-6 md:mb-0">
+    <span class="font-title-sm text-title-sm font-bold text-primary dark:text-primary-fixed mb-2">FleetControl</span>
+    <p class="font-body-sm text-body-sm text-on-surface-variant dark:text-on-primary-fixed-variant">© 2024 FleetControl Operations. All rights reserved.</p>
+  </div>
+</footer>

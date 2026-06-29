@@ -1,0 +1,385 @@
+<app-navbar></app-navbar>
+
+<main class="ml-0 md:ml-60 p-4 md:p-6 pb-24 md:pb-6 space-y-6">
+  <!-- Role Restriction Case -->
+  @if (isRestricted()) {
+    <div class="flex flex-col items-center justify-center min-h-[450px] bg-surface-container-lowest border border-outline-variant/30 rounded-2xl shadow-[0px_4px_20px_rgba(0,0,0,0.05)] p-12 text-center">
+      <div class="w-16 h-16 rounded-full bg-error-container/20 flex items-center justify-center text-error mb-4">
+        <span class="material-symbols-outlined text-[36px]" data-icon="lock">lock</span>
+      </div>
+      <h3 class="font-title-sm text-title-sm text-primary">Access Restricted</h3>
+      <p class="text-on-surface-variant font-body-sm mt-1 max-w-xs">You do not have the required permissions to view or manage financial expense logs.</p>
+    </div>
+  } @else {
+    <!-- Main Content -->
+    @if (isLoading() && expenses().length === 0) {
+      <div class="flex flex-col items-center justify-center min-h-[450px] bg-surface-container-lowest/80 backdrop-blur-md rounded-2xl border border-outline-variant/30 shadow-sm p-12 text-center">
+        <div class="w-12 h-12 rounded-full border-4 border-outline-variant border-t-secondary animate-spin mb-4"></div>
+        <h3 class="font-title-sm text-title-sm text-primary">Loading Expense Records</h3>
+        <p class="text-on-surface-variant font-body-sm mt-1">Fetching financial transaction logs...</p>
+      </div>
+    } @else {
+      <!-- Page Header -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 class="font-display-lg text-display-lg text-primary">Expense Logs</h2>
+          <p class="text-on-surface-variant font-body-md">Track fleet expenditures, insurance, toll tags, and maintenance costs.</p>
+        </div>
+        <div class="flex items-center gap-3 self-end sm:self-auto">
+          <button (click)="exportReport()"
+            class="flex h-9 px-4 border border-outline-variant/50 hover:bg-surface-container text-on-surface font-label-caps text-label-caps rounded items-center gap-2 transition-colors">
+            <span class="material-symbols-outlined text-[18px]" data-icon="download">download</span>
+            Export CSV
+          </button>
+          <button (click)="openAddModal()"
+            class="flex h-9 px-4 bg-secondary text-on-secondary font-label-caps text-label-caps rounded items-center gap-2 hover:brightness-110 transition-all active:scale-95">
+            <span class="material-symbols-outlined text-[18px]" data-icon="add">add</span>
+            Record Expense
+          </button>
+        </div>
+      </div>
+
+      <!-- Filters & Stats Grid -->
+      <div class="bg-surface-container-lowest border border-outline-variant/30 rounded-xl shadow-sm p-4 md:p-6 space-y-6">
+        <!-- Controls Bar -->
+        <div class="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-4">
+          <div class="relative flex-1 max-w-md">
+            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]" data-icon="search">search</span>
+            <input type="text" [value]="searchTerm()" (input)="onSearch($event)"
+              placeholder="Search reference or expense type..."
+              class="w-full h-10 bg-surface-container-low pl-10 pr-4 border border-outline-variant/30 rounded-lg text-body-md focus:ring-2 focus:ring-secondary-container outline-none" />
+          </div>
+          <div class="text-[12px] text-on-surface-variant font-semibold select-none flex items-center gap-1.5 font-mono">
+            Total on page: <span class="font-bold text-primary text-[14px]">{{ totalExpensesAmount() | currency:'USD' }}</span>
+          </div>
+        </div>
+
+        <!-- Table -->
+        <div class="overflow-x-auto">
+          <table class="w-full border-collapse text-left">
+            <thead>
+              <tr class="bg-surface-container-low border-b border-outline-variant/30">
+                <th (click)="changeSort('VehicleRegNo')" class="p-4 font-label-caps text-[11px] font-bold uppercase tracking-wider text-on-surface-variant cursor-pointer hover:text-primary transition-colors select-none">
+                  Vehicle
+                  @if (sortBy() === 'VehicleRegNo') {
+                    <span class="material-symbols-outlined text-xs select-none">{{ sortOrder() === 'asc' ? 'arrow_upward' : 'arrow_downward' }}</span>
+                  }
+                </th>
+                <th (click)="changeSort('ExpenseType')" class="p-4 font-label-caps text-[11px] font-bold uppercase tracking-wider text-on-surface-variant cursor-pointer hover:text-primary transition-colors select-none">
+                  Type
+                  @if (sortBy() === 'ExpenseType') {
+                    <span class="material-symbols-outlined text-xs select-none">{{ sortOrder() === 'asc' ? 'arrow_upward' : 'arrow_downward' }}</span>
+                  }
+                </th>
+                <th (click)="changeSort('Amount')" class="p-4 font-label-caps text-[11px] font-bold uppercase tracking-wider text-on-surface-variant cursor-pointer hover:text-primary transition-colors select-none">
+                  Amount
+                  @if (sortBy() === 'Amount') {
+                    <span class="material-symbols-outlined text-xs select-none">{{ sortOrder() === 'asc' ? 'arrow_upward' : 'arrow_downward' }}</span>
+                  }
+                </th>
+                <th class="p-4 font-label-caps text-[11px] font-bold uppercase tracking-wider text-on-surface-variant">Reference</th>
+                <th class="p-4 font-label-caps text-[11px] font-bold uppercase tracking-wider text-on-surface-variant">Validity Period</th>
+                <th (click)="changeSort('CreatedAt')" class="p-4 font-label-caps text-[11px] font-bold uppercase tracking-wider text-on-surface-variant cursor-pointer hover:text-primary transition-colors select-none">
+                  Recorded Date
+                  @if (sortBy() === 'CreatedAt') {
+                    <span class="material-symbols-outlined text-xs select-none">{{ sortOrder() === 'asc' ? 'arrow_upward' : 'arrow_downward' }}</span>
+                  }
+                </th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-outline-variant/20 text-body-md">
+              @if (expenses().length === 0) {
+                <tr>
+                  <td colspan="6" class="p-8 text-center text-on-surface-variant font-body-md">
+                    No expense logs match the filter query.
+                  </td>
+                </tr>
+              } @else {
+                @for (item of expenses(); track item.id) {
+                  <tr (click)="selectRow(item.id)"
+                    class="hover:bg-surface-container-low transition-colors cursor-pointer duration-150">
+                    <td class="p-4">
+                      <div>
+                        <p class="font-bold text-primary font-tabular-nums">{{ item.vehicleRegNo }}</p>
+                        <p class="text-[10px] text-on-surface-variant">{{ item.vehicleModelName || 'Asset Model' }}</p>
+                      </div>
+                    </td>
+                    <td class="p-4 font-medium text-primary">
+                      <span class="px-2 py-0.5 rounded text-[11px] font-bold bg-primary/5 border border-primary/10">
+                        {{ item.expenseType }}
+                      </span>
+                    </td>
+                    <td class="p-4 font-bold text-error font-tabular-nums">
+                      {{ item.amount | currency:'USD' }}
+                    </td>
+                    <td class="p-4 text-on-surface-variant font-mono font-semibold">
+                      {{ item.referenceNumber }}
+                    </td>
+                    <td class="p-4 text-xs text-on-surface-variant font-medium">
+                      {{ item.validFrom | date:'shortDate' }} — {{ item.validTo | date:'shortDate' }}
+                    </td>
+                    <td class="p-4 text-xs text-on-surface-variant font-tabular-nums">
+                      {{ item.createdAt | date:'short' }}
+                    </td>
+                  </tr>
+                }
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination Controls -->
+        @if (totalPages() > 1) {
+          <div class="flex justify-between items-center pt-4 border-t border-outline-variant/20 select-none">
+            <span class="text-body-sm text-on-surface-variant">
+              Page <span class="font-semibold text-primary">{{ pageNumber() }}</span> of <span class="font-semibold text-primary">{{ totalPages() }}</span> (<span class="font-medium">{{ totalCount() }} total</span>)
+            </span>
+            <div class="flex gap-2">
+              <button [disabled]="pageNumber() === 1" (click)="changePage(pageNumber() - 1)"
+                class="w-10 h-10 rounded border border-outline-variant/30 flex items-center justify-center hover:bg-surface-container disabled:opacity-40 disabled:cursor-not-allowed">
+                <span class="material-symbols-outlined text-[20px]" data-icon="chevron_left">chevron_left</span>
+              </button>
+              <button [disabled]="pageNumber() === totalPages()" (click)="changePage(pageNumber() + 1)"
+                class="w-10 h-10 rounded border border-outline-variant/30 flex items-center justify-center hover:bg-surface-container disabled:opacity-40 disabled:cursor-not-allowed">
+                <span class="material-symbols-outlined text-[20px]" data-icon="chevron_right">chevron_right</span>
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  }
+</main>
+
+<!-- Record Expense Modal Overlay -->
+@if (isAddModalOpen()) {
+<div class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
+  <div class="bg-surface-container-lowest border border-outline-variant/30 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+    <!-- Header -->
+    <div class="p-6 border-b border-outline-variant/20 flex justify-between items-center bg-surface-container-low">
+      <h3 class="font-title-sm text-title-sm text-primary font-bold">Record Vehicle Expense</h3>
+      <button (click)="closeAddModal()" class="p-1 hover:bg-surface-variant rounded-full text-on-surface-variant">
+        <span class="material-symbols-outlined" data-icon="close">close</span>
+      </button>
+    </div>
+
+    <!-- Body -->
+    <form [formGroup]="expenseForm" (ngSubmit)="onSubmit()" class="p-6 space-y-4 overflow-y-auto custom-scrollbar flex-1">
+      @if (addErrorMessage()) {
+        <div class="p-3 bg-error-container text-on-error-container rounded-lg text-body-sm font-semibold flex items-center gap-2">
+          <span class="material-symbols-outlined text-[18px]" data-icon="error">error</span>
+          <span class="flex-1">{{ addErrorMessage() }}</span>
+        </div>
+      }
+
+      <!-- Vehicle Select -->
+      <div class="space-y-1.5">
+        <label class="block text-body-sm font-bold text-on-surface-variant">Select Fleet Vehicle</label>
+        <select formControlName="vehicleId"
+          class="w-full h-10 px-3 bg-surface-container-low border border-outline-variant/30 rounded-lg text-body-md focus:ring-2 focus:ring-secondary-container outline-none">
+          <option value="">Select Vehicle</option>
+          @for (veh of vehicles(); track veh.id) {
+            <option [value]="veh.id">{{ veh.regNo }} — {{ veh.modelName || 'Asset Model' }}</option>
+          }
+        </select>
+        @if (expenseForm.get('vehicleId')?.touched && expenseForm.get('vehicleId')?.invalid) {
+          <p class="text-error text-[11px] font-semibold flex items-center gap-1">
+            <span class="material-symbols-outlined text-[14px]">error</span>
+            Vehicle selection is required.
+          </p>
+        }
+      </div>
+
+      <!-- Expense Type Select -->
+      <div class="space-y-1.5">
+        <label class="block text-body-sm font-bold text-on-surface-variant">Expense Category Type</label>
+        <select formControlName="expenseType"
+          class="w-full h-10 px-3 bg-surface-container-low border border-outline-variant/30 rounded-lg text-body-md focus:ring-2 focus:ring-secondary-container outline-none">
+          <option value="">Select Type</option>
+          <option value="Fuel">Fuel</option>
+          <option value="Maintenance">Maintenance</option>
+          <option value="Insurance">Insurance</option>
+          <option value="Tolls">Tolls</option>
+          <option value="Permits">Permits</option>
+          <option value="Other">Other</option>
+        </select>
+        @if (expenseForm.get('expenseType')?.touched && expenseForm.get('expenseType')?.invalid) {
+          <p class="text-error text-[11px] font-semibold flex items-center gap-1">
+            <span class="material-symbols-outlined text-[14px]">error</span>
+            Expense type category is required.
+          </p>
+        }
+      </div>
+
+      <!-- Amount -->
+      <div class="space-y-1.5">
+        <label class="block text-body-sm font-bold text-on-surface-variant">Expense Amount ($)</label>
+        <input type="number" formControlName="amount"
+          class="w-full h-10 px-3 bg-surface-container-low border border-outline-variant/30 rounded-lg text-body-md focus:ring-2 focus:ring-secondary-container outline-none" />
+        @if (expenseForm.get('amount')?.touched && expenseForm.get('amount')?.invalid) {
+          <p class="text-error text-[11px] font-semibold flex items-center gap-1">
+            <span class="material-symbols-outlined text-[14px]">error</span>
+            Expense amount must be a positive number.
+          </p>
+        }
+      </div>
+
+      <!-- Reference Number -->
+      <div class="space-y-1.5">
+        <label class="block text-body-sm font-bold text-on-surface-variant">Reference / Receipt Number</label>
+        <input type="text" formControlName="referenceNumber" placeholder="e.g. REC-1192942"
+          class="w-full h-10 px-3 bg-surface-container-low border border-outline-variant/30 rounded-lg text-body-md focus:ring-2 focus:ring-secondary-container outline-none" />
+        @if (expenseForm.get('referenceNumber')?.touched && expenseForm.get('referenceNumber')?.invalid) {
+          <p class="text-error text-[11px] font-semibold flex items-center gap-1">
+            <span class="material-symbols-outlined text-[14px]">error</span>
+            Valid reference number is required (max 50 chars).
+          </p>
+        }
+      </div>
+
+      <!-- Valid From Date -->
+      <div class="space-y-1.5">
+        <label class="block text-body-sm font-bold text-on-surface-variant">Coverage Period Start (Valid From)</label>
+        <input type="date" formControlName="validFrom"
+          class="w-full h-10 px-3 bg-surface-container-low border border-outline-variant/30 rounded-lg text-body-md focus:ring-2 focus:ring-secondary-container outline-none" />
+        @if (expenseForm.get('validFrom')?.touched && expenseForm.get('validFrom')?.hasError('required')) {
+          <p class="text-error text-[11px] font-semibold flex items-center gap-1">
+            <span class="material-symbols-outlined text-[14px]">error</span>
+            Coverage start date is required.
+          </p>
+        }
+        @if (expenseForm.get('validFrom')?.touched && expenseForm.hasError('validFromInPast')) {
+          <p class="text-error text-[11px] font-semibold flex items-center gap-1">
+            <span class="material-symbols-outlined text-[14px]">error</span>
+            Expense valid from date must be today or in the future.
+          </p>
+        }
+      </div>
+
+      <!-- Valid To Date -->
+      <div class="space-y-1.5">
+        <label class="block text-body-sm font-bold text-on-surface-variant">Coverage Period End (Valid To)</label>
+        <input type="date" formControlName="validTo"
+          class="w-full h-10 px-3 bg-surface-container-low border border-outline-variant/30 rounded-lg text-body-md focus:ring-2 focus:ring-secondary-container outline-none" />
+        @if (expenseForm.get('validTo')?.touched && expenseForm.get('validTo')?.invalid) {
+          <p class="text-error text-[11px] font-semibold flex items-center gap-1">
+            <span class="material-symbols-outlined text-[14px]">error</span>
+            Coverage end date is required.
+          </p>
+        }
+      </div>
+
+      <!-- Date Range Custom Validator Error -->
+      @if (expenseForm.hasError('invalidDateRange')) {
+        <p class="text-error text-[11px] font-semibold flex items-center gap-1 pt-1">
+          <span class="material-symbols-outlined text-[14px]">error</span>
+          Validity coverage end date must be after or equal to the start date.
+        </p>
+      }
+
+      <!-- Form Footer Actions -->
+      <div class="pt-4 flex justify-end gap-3 border-t border-outline-variant/20 mt-6">
+        <button type="button" (click)="closeAddModal()"
+          class="h-10 px-4 border border-outline-variant/30 hover:bg-surface-container text-on-surface font-label-caps text-label-caps rounded transition-colors">
+          Cancel
+        </button>
+        <button type="submit"
+          class="h-10 px-4 bg-secondary hover:brightness-110 text-on-secondary font-label-caps text-label-caps rounded transition-all active:scale-95">
+          Record
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+}
+
+<!-- Expense Details Modal Overlay -->
+@if (isDetailsModalOpen()) {
+<div class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
+  <div class="bg-surface-container-lowest border border-outline-variant/30 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+    <!-- Header -->
+    <div class="p-6 border-b border-outline-variant/20 flex justify-between items-center bg-surface-container-low">
+      <h3 class="font-title-sm text-title-sm text-primary font-bold">Expense Transaction Details</h3>
+      <button (click)="closeDetailsModal()" class="p-1 hover:bg-surface-variant rounded-full text-on-surface-variant">
+        <span class="material-symbols-outlined" data-icon="close">close</span>
+      </button>
+    </div>
+
+    <!-- Body -->
+    <div class="p-6 space-y-4 overflow-y-auto custom-scrollbar flex-1">
+      @if (detailsLoading()) {
+        <div class="flex flex-col items-center justify-center py-12 text-center">
+          <div class="w-10 h-10 rounded-full border-4 border-outline-variant border-t-secondary animate-spin"></div>
+          <p class="text-on-surface-variant font-body-sm mt-3">Fetching transaction details...</p>
+        </div>
+      } @else if (detailsError()) {
+        <div class="p-4 bg-error-container text-on-error-container rounded-lg text-body-sm font-semibold flex items-center gap-2">
+          <span class="material-symbols-outlined text-[18px]" data-icon="error">error</span>
+          <span class="flex-1">{{ detailsError() }}</span>
+        </div>
+      } @else if (selectedExpenseDetails(); as details) {
+        <div class="space-y-4">
+          <!-- Vehicle Section -->
+          <div class="border-b border-outline-variant/10 pb-3">
+            <span class="block text-[11px] font-bold text-on-surface-variant uppercase tracking-wider">Vehicle</span>
+            <span class="text-headline-sm font-headline-md text-primary font-bold tracking-tight">{{ details.vehicleRegNo }}</span>
+            <span class="block text-body-md font-semibold text-on-surface-variant mt-0.5">{{ details.vehicleModelName || 'Asset Model' }}</span>
+          </div>
+
+          <!-- Type and Amount Section -->
+          <div class="grid grid-cols-2 gap-4 border-b border-outline-variant/10 pb-3">
+            <div>
+              <span class="block text-[11px] font-bold text-on-surface-variant uppercase tracking-wider">Expense Type</span>
+              <span class="text-body-md font-bold text-primary mt-0.5 inline-block px-2.5 py-0.5 rounded bg-primary/5 border border-primary/10">
+                {{ details.expenseType }}
+              </span>
+            </div>
+            <div>
+              <span class="block text-[11px] font-bold text-on-surface-variant uppercase tracking-wider">Amount Paid</span>
+              <span class="text-title-sm font-title-sm text-error font-extrabold mt-0.5 block">{{ details.amount | currency:'USD' }}</span>
+            </div>
+          </div>
+
+          <!-- Reference & Recorded Date Section -->
+          <div class="grid grid-cols-2 gap-4 border-b border-outline-variant/10 pb-3">
+            <div>
+              <span class="block text-[11px] font-bold text-on-surface-variant uppercase tracking-wider">Reference Code</span>
+              <span class="text-body-md font-mono font-bold text-primary">{{ details.referenceNumber }}</span>
+            </div>
+            <div>
+              <span class="block text-[11px] font-bold text-on-surface-variant uppercase tracking-wider">Date Recorded</span>
+              <span class="text-xs font-semibold text-primary font-tabular-nums">{{ details.createdAt | date:'short' }}</span>
+            </div>
+          </div>
+
+          <!-- Coverage Validity Dates Section -->
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <span class="block text-[11px] font-bold text-on-surface-variant uppercase tracking-wider">Valid From</span>
+              <span class="text-xs font-semibold text-primary font-tabular-nums">{{ details.validFrom | date:'mediumDate' }}</span>
+            </div>
+            <div>
+              <span class="block text-[11px] font-bold text-on-surface-variant uppercase tracking-wider">Valid To</span>
+              <span class="text-xs font-semibold text-primary font-tabular-nums">{{ details.validTo | date:'mediumDate' }}</span>
+            </div>
+          </div>
+
+          <!-- System IDs -->
+          <div class="border-t border-outline-variant/10 pt-3 text-[10px] text-on-surface-variant/70 font-mono space-y-0.5">
+            <p>Expense ID: {{ details.id }}</p>
+            <p>Vehicle ID: {{ details.vehicleId }}</p>
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- Footer -->
+    <div class="p-4 flex justify-end border-t border-outline-variant/20 bg-surface-container-low">
+      <button type="button" (click)="closeDetailsModal()"
+        class="h-10 px-4 bg-secondary hover:brightness-110 text-on-secondary font-label-caps text-label-caps rounded transition-all active:scale-95">
+        Close
+      </button>
+    </div>
+  </div>
+</div>
+}

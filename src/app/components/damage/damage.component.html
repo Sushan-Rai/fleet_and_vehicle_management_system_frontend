@@ -1,0 +1,153 @@
+<app-navbar></app-navbar>
+
+<main class="ml-0 md:ml-60 pt-16 md:pt-6 p-4 md:p-6 pb-24 md:pb-6 space-y-6">
+  <!-- Page Header -->
+  <div class="flex flex-col gap-1">
+    <h2 class="font-display-lg text-display-lg text-primary tracking-tight">Report Vehicle Damage</h2>
+    <p class="text-on-surface-variant font-body-md">Submit damage details. Reporting damage places the vehicle under maintenance automatically.</p>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+    <!-- Form Card -->
+    <div class="lg:col-span-8 bg-surface-container-lowest border border-outline-variant rounded-xl p-6 shadow-sm flex flex-col justify-between">
+      <h3 class="font-title-sm text-title-sm text-primary flex items-center gap-2 mb-6">
+        <span class="material-symbols-outlined text-error" style="font-variation-settings: 'FILL' 1;">warning</span>
+        Damage Report Form
+      </h3>
+
+      <!-- Banners -->
+      @if (successMessage()) {
+      <div class="mb-6 p-4 bg-emerald-50 text-emerald-800 rounded-lg text-body-sm font-semibold flex items-center gap-2 border border-emerald-200">
+        <span class="material-symbols-outlined text-[18px]">check_circle</span>
+        <span>{{ successMessage() }}</span>
+      </div>
+      }
+
+      @if (errorMessage()) {
+      <div class="mb-6 p-4 bg-error-container text-on-error-container rounded-lg text-body-sm font-semibold flex items-center gap-2">
+        <span class="material-symbols-outlined text-[18px]">error</span>
+        <span>{{ errorMessage() }}</span>
+      </div>
+      }
+
+      <form [formGroup]="damageForm" (ngSubmit)="onSubmit()" class="space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- Vehicle Selector -->
+          <div class="space-y-1.5 col-span-2">
+            <label class="block text-body-sm font-bold text-on-surface-variant">Select Vehicle</label>
+            <select formControlName="vehicleId"
+              class="w-full h-10 px-3 bg-surface-container-low border border-outline-variant/30 rounded-lg text-body-md focus:ring-2 focus:ring-secondary-container outline-none disabled:opacity-75 disabled:cursor-not-allowed">
+              <option value="">Choose damaged vehicle...</option>
+              @for (v of vehicles(); track v.id) {
+              <option [value]="v.id">{{ v.regNo }} - {{ v.modelName || 'Unknown Model' }} (Location: {{ v.routename || 'Unassigned' }})</option>
+              }
+            </select>
+            @if (damageForm.get('vehicleId')?.touched && damageForm.get('vehicleId')?.invalid) {
+            <p class="text-error text-[11px] font-semibold flex items-center gap-1">
+              <span class="material-symbols-outlined text-[14px]">error</span>
+              Vehicle selection is required.
+            </p>
+            }
+          </div>
+
+          <!-- Report Date -->
+          <div class="space-y-1.5 col-span-2 md:col-span-1">
+            <label class="block text-body-sm font-bold text-on-surface-variant">Report Date</label>
+            <input formControlName="reportDate" type="date"
+              class="w-full h-10 px-3 bg-surface-container-low border border-outline-variant/30 rounded-lg text-body-md focus:ring-2 focus:ring-secondary-container outline-none" />
+            @if (damageForm.get('reportDate')?.touched && damageForm.get('reportDate')?.invalid) {
+            <p class="text-error text-[11px] font-semibold flex items-center gap-1">
+              <span class="material-symbols-outlined text-[14px]">error</span>
+              Report date is required.
+            </p>
+            }
+            @if (damageForm.hasError('futureDate')) {
+            <p class="text-error text-[11px] font-semibold flex items-center gap-1">
+              <span class="material-symbols-outlined text-[14px]">error</span>
+              Report date cannot be in the future.
+            </p>
+            }
+          </div>
+
+          <!-- Driver ID (locked for driver) -->
+          <div class="space-y-1.5 col-span-2 md:col-span-1">
+            <label class="block text-body-sm font-bold text-on-surface-variant">Driver ID (Optional)</label>
+            <input formControlName="driverId" type="text" placeholder="e.g. UUID (Leave blank if none)"
+              class="w-full h-10 px-3 bg-surface-container-low border border-outline-variant/30 rounded-lg text-body-md focus:ring-2 focus:ring-secondary-container outline-none disabled:opacity-75 disabled:cursor-not-allowed" />
+          </div>
+
+          <!-- Description -->
+          <div class="space-y-1.5 col-span-2">
+            <label class="block text-body-sm font-bold text-on-surface-variant">Damage Description</label>
+            <textarea formControlName="description" rows="4" placeholder="Detail the damage here (e.g. cracked windshield, flat tire, bumper dent)..."
+              class="w-full p-3 bg-surface-container-low border border-outline-variant/30 rounded-lg text-body-md focus:ring-2 focus:ring-secondary-container outline-none resize-none"></textarea>
+            @if (damageForm.get('description')?.touched && damageForm.get('description')?.invalid) {
+            <p class="text-error text-[11px] font-semibold flex items-center gap-1">
+              <span class="material-symbols-outlined text-[14px]">error</span>
+              Description must be at least 5 characters.
+            </p>
+            }
+          </div>
+
+          <!-- Estimated Cost -->
+          <div class="space-y-1.5 col-span-2 md:col-span-1">
+            <label class="block text-body-sm font-bold text-on-surface-variant">Estimated Repair Cost ($)</label>
+            <input formControlName="estimatedRepairCost" type="number" min="0" step="0.01"
+              class="w-full h-10 px-3 bg-surface-container-low border border-outline-variant/30 rounded-lg text-body-md focus:ring-2 focus:ring-secondary-container outline-none" />
+            @if (damageForm.get('estimatedRepairCost')?.touched && damageForm.get('estimatedRepairCost')?.invalid) {
+            <p class="text-error text-[11px] font-semibold flex items-center gap-1">
+              <span class="material-symbols-outlined text-[14px]">error</span>
+              Please enter a valid non-negative cost.
+            </p>
+            }
+          </div>
+
+          <!-- Driver Deduction Score (Only visible to non-Drivers) -->
+          @if (!isDriver()) {
+          <div class="space-y-1.5 col-span-2 md:col-span-1">
+            <label class="block text-body-sm font-bold text-on-surface-variant">Driver Deduction Score (0-100)</label>
+            <input formControlName="driverDeductionScore" type="number" min="0" max="100"
+              class="w-full h-10 px-3 bg-surface-container-low border border-outline-variant/30 rounded-lg text-body-md focus:ring-2 focus:ring-secondary-container outline-none" />
+            @if (damageForm.get('driverDeductionScore')?.touched && damageForm.get('driverDeductionScore')?.invalid) {
+            <p class="text-error text-[11px] font-semibold flex items-center gap-1">
+              <span class="material-symbols-outlined text-[14px]">error</span>
+              Score must be between 0 and 100.
+            </p>
+            }
+          </div>
+          }
+        </div>
+
+        <div class="flex justify-end pt-4 border-t border-outline-variant/20 gap-3">
+          <button type="button" routerLink="/vehicles"
+            class="h-10 px-4 border border-outline-variant/30 hover:bg-surface-container text-on-surface font-label-caps text-label-caps rounded transition-colors">
+            Cancel
+          </button>
+          <button type="submit" [disabled]="damageForm.invalid || isSubmitting()"
+            class="h-10 px-6 bg-secondary text-on-secondary hover:brightness-110 disabled:opacity-50 font-label-caps text-label-caps rounded transition-all active:scale-95 flex items-center gap-2">
+            @if (isSubmitting()) {
+            <div class="w-4 h-4 rounded-full border-2 border-on-secondary border-t-transparent animate-spin"></div>
+            Reporting...
+            } @else {
+            <span class="material-symbols-outlined text-[18px]">send</span>
+            Report Damage
+            }
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Instructions Card -->
+    <div class="lg:col-span-4 space-y-6">
+      <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 shadow-sm">
+        <h4 class="font-title-sm text-title-sm text-primary mb-3">Guidelines</h4>
+        <ul class="space-y-3 text-body-sm text-on-surface-variant list-disc pl-4">
+          <li>Select the exact vehicle registration number that incurred the damage.</li>
+          <li>The date defaults to today's date and cannot be in the future.</li>
+          <li>Provide a descriptive account of the damage so mechanics can prepare the right tools.</li>
+          <li>For Drivers, your driving score deduction (if any) will be audited and evaluated by the route's Fleet Manager.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</main>

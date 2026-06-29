@@ -1,0 +1,256 @@
+<app-navbar></app-navbar>
+
+<main class="ml-0 md:ml-60 p-4 md:p-6 pb-24 md:pb-6 space-y-6">
+  <!-- Role Restriction Case -->
+  @if (isDriver()) {
+    <div class="flex flex-col items-center justify-center min-h-[450px] bg-surface-container-lowest border border-outline-variant/30 rounded-2xl shadow-[0px_4px_20px_rgba(0,0,0,0.05)] p-12 text-center">
+      <div class="w-16 h-16 rounded-full bg-error-container/20 flex items-center justify-center text-error mb-4">
+        <span class="material-symbols-outlined text-[36px]" data-icon="lock">lock</span>
+      </div>
+      <h3 class="font-title-sm text-title-sm text-primary">Access Restricted</h3>
+      <p class="text-on-surface-variant font-body-sm mt-1 max-w-xs">You do not have the required permissions to view analytics dashboards.</p>
+    </div>
+  } @else {
+    @if (isLoading()) {
+    <div class="flex flex-col items-center justify-center min-h-[450px] bg-surface-container-lowest/80 backdrop-blur-md rounded-2xl border border-outline-variant/30 shadow-[0px_4px_20px_rgba(0,0,0,0.05)] p-12 text-center transition-all duration-300">
+      <div class="relative w-16 h-16 mb-4 flex items-center justify-center">
+        <!-- Pulse ring -->
+        <span class="absolute inline-flex h-full w-full rounded-full bg-secondary/10 animate-ping"></span>
+        <!-- Spinner -->
+        <div class="w-12 h-12 rounded-full border-4 border-outline-variant border-t-secondary animate-spin"></div>
+      </div>
+      <h3 class="font-title-sm text-title-sm text-primary animate-pulse">Analyzing Fleet Performance</h3>
+      <p class="text-on-surface-variant font-body-sm mt-1 max-w-xs">Connecting to secure telematics node and preparing optimization metrics...</p>
+    </div>
+  } @else {
+    <!-- Header & Period Filter -->
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+      <div>
+        <h2 class="font-display-lg text-display-lg text-primary">Fleet Performance Analytics</h2>
+        <p class="font-body-md text-body-md text-on-surface-variant">Real-time efficiency, safety metrics, and utilization trends.</p>
+      </div>
+      <div class="flex items-center gap-2 self-end sm:self-auto">
+        <label class="text-body-sm font-bold text-on-surface-variant select-none">Period:</label>
+        <select [value]="chartPeriod()" (change)="onPeriodChange($event)" class="bg-surface-container-low border-none rounded text-body-sm font-bold focus:ring-2 focus:ring-secondary-container pr-8 py-1">
+          <option value="7days">Last 7 Days</option>
+          <option value="month">Current Month</option>
+          <option value="year">Current Year</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- KPIs Row -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-grid-gutter">
+      <!-- KPI 1: Utilization -->
+      <div class="bg-surface-container-lowest p-5 rounded-xl shadow-[0px_1px_3px_rgba(0,0,0,0.05)] border border-outline-variant/30 flex flex-col justify-between hover:shadow-md transition-all">
+        <div class="flex justify-between items-start">
+          <div class="p-2 bg-secondary/5 rounded-lg text-secondary">
+            <span class="material-symbols-outlined" data-icon="speed">speed</span>
+          </div>
+          <span class="text-label-caps font-label-caps text-on-secondary-fixed bg-secondary-fixed px-2 py-0.5 rounded">Active</span>
+        </div>
+        <div class="mt-4">
+          <p class="text-on-surface-variant font-label-caps uppercase tracking-wider text-[10px]">Fleet Utilization (%)</p>
+          <p class="text-display-lg font-display-lg tabular-nums">{{ overallUtilizationPercentage() | number:'1.1-1' }}<span class="text-title-sm">%</span></p>
+          <p class="text-[10px] text-on-surface-variant/80 mt-1">
+            Overall average for selected period
+          </p>
+        </div>
+      </div>
+
+      <!-- KPI 2: Safety Score -->
+      <div class="bg-surface-container-lowest p-5 rounded-xl shadow-[0px_1px_3px_rgba(0,0,0,0.05)] border border-outline-variant/30 flex flex-col justify-between hover:shadow-md transition-all">
+        <div class="flex justify-between items-start">
+          <div class="p-2 bg-primary/5 rounded-lg text-primary">
+            <span class="material-symbols-outlined" data-icon="health_and_safety">health_and_safety</span>
+          </div>
+          <span class="text-label-caps font-label-caps text-on-primary-fixed bg-primary-fixed px-2 py-0.5 rounded">Rating</span>
+        </div>
+        <div class="mt-4">
+          <p class="text-on-surface-variant font-label-caps uppercase tracking-wider text-[10px]">Avg. Safety Score</p>
+          <p class="text-display-lg font-display-lg tabular-nums">{{ avgDriverScore() | number:'1.1-1' }}</p>
+          <div class="w-full bg-surface-container h-1.5 rounded-full mt-3">
+            <div class="h-full rounded-full transition-all duration-500" 
+                 [class.bg-green-500]="avgDriverScore() >= 85"
+                 [class.bg-orange-500]="avgDriverScore() >= 70 && avgDriverScore() < 85"
+                 [class.bg-red-500]="avgDriverScore() < 70"
+                 [style.width.%]="avgDriverScore()"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- KPI 3: Replacement Candidates -->
+      <div class="bg-surface-container-lowest p-5 rounded-xl shadow-[0px_1px_3px_rgba(0,0,0,0.05)] border border-outline-variant/30 flex flex-col justify-between hover:shadow-md transition-all">
+        <div class="flex justify-between items-start">
+          <div class="p-2 bg-error/5 rounded-lg text-error">
+            <span class="material-symbols-outlined" data-icon="warning">warning</span>
+          </div>
+          @if (replacementCandidatesCount() > 0) {
+            <span class="text-label-caps font-label-caps text-on-error bg-error px-2 py-0.5 rounded">Attention</span>
+          } @else {
+            <span class="text-label-caps font-label-caps text-green-700 bg-green-50 px-2 py-0.5 rounded">Optimal</span>
+          }
+        </div>
+        <div class="mt-4">
+          <p class="text-on-surface-variant font-label-caps uppercase tracking-wider text-[10px]">Replacement Candidates</p>
+          <p class="text-display-lg font-display-lg tabular-nums">{{ replacementCandidatesCount() }}</p>
+          <p class="text-[10px] text-on-surface-variant/80 mt-1">
+            High-cost assets recommended for decommissioning
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Charts & Driver Behavior Panel Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-grid-gutter">
+      <!-- Left: Utilization Trends Over Time -->
+      <div class="lg:col-span-2 bg-surface-container-lowest p-6 rounded-xl border border-outline-variant/30 shadow-[0px_1px_3px_rgba(0,0,0,0.05)]">
+        <div class="flex justify-between items-center mb-6">
+          <div>
+            <h3 class="font-title-sm text-title-sm text-primary">Utilization Trends</h3>
+            <p class="text-body-sm text-on-surface-variant">Fleet utilization percentage overview</p>
+          </div>
+        </div>
+        
+        <div class="h-64 relative flex items-end justify-between gap-1 mt-4 border-b border-outline-variant/20 pb-1">
+          @if (chartData().length === 0) {
+            <div class="absolute inset-0 flex items-center justify-center text-on-surface-variant/60 font-body-sm">
+              No utilization data available for this period.
+            </div>
+          } @else {
+            @for (bar of chartData(); track bar.label) {
+              <div class="flex-1 bg-secondary-fixed/30 rounded-t hover:bg-secondary-container hover:shadow-md transition-all group relative cursor-pointer" [style.height.%]="bar.value || 2">
+                <!-- Floating tooltip -->
+                <div class="absolute -top-12 left-1/2 -translate-x-1/2 bg-primary dark:bg-primary-container text-on-primary text-[10px] px-2 py-1 rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-150 z-20 pointer-events-none whitespace-nowrap text-center">
+                  <span class="block font-bold text-secondary-fixed">{{ bar.value | number:'1.0-1' }}%</span>
+                  <span class="text-[9px] opacity-80">{{ bar.label }}</span>
+                </div>
+              </div>
+            }
+          }
+        </div>
+
+        <div class="flex justify-between mt-4 text-[10px] text-on-surface-variant font-semibold select-none gap-1 overflow-x-auto">
+          @for (bar of chartData(); track bar.label) {
+            <span class="flex-1 text-center truncate" [title]="bar.label">{{ bar.label }}</span>
+          }
+        </div>
+      </div>
+
+      <!-- Right: Driver Performance Leaderboard -->
+      <div class="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant/30 shadow-[0px_1px_3px_rgba(0,0,0,0.05)] flex flex-col justify-between">
+        <div>
+          <h3 class="font-title-sm text-title-sm text-primary mb-1">Driver Performance</h3>
+          <p class="text-body-sm text-on-surface-variant mb-6">Top performing drivers safety scores</p>
+          <div class="space-y-4">
+            @if (topDrivers().length === 0) {
+              <p class="text-on-surface-variant font-body-sm text-center py-6">No driver score records found.</p>
+            } @else {
+              @for (driver of topDrivers(); track driver.driverId) {
+                <div class="flex items-center gap-3 p-3 border border-outline-variant/20 rounded-lg bg-surface-container-low hover:shadow-sm transition-all duration-150">
+                  <div class="w-10 h-10 rounded-full bg-secondary-fixed flex items-center justify-center text-primary font-bold text-sm">
+                    {{ getInitials(driver.driverName) }}
+                  </div>
+                  <div class="flex-1">
+                    <div class="flex justify-between items-center mb-1">
+                      <span class="text-body-md font-bold text-primary truncate max-w-[120px]">{{ driver.driverName }}</span>
+                      <span class="font-bold text-body-sm"
+                            [class.text-green-600]="driver.driverScore >= 85"
+                            [class.text-orange-600]="driver.driverScore >= 70 && driver.driverScore < 85"
+                            [class.text-red-600]="driver.driverScore < 70">{{ driver.driverScore }}</span>
+                    </div>
+                    <div class="w-full bg-surface-container h-1 rounded-full">
+                      <div class="h-1 rounded-full" 
+                           [class.bg-green-500]="driver.driverScore >= 85"
+                           [class.bg-orange-500]="driver.driverScore >= 70 && driver.driverScore < 85"
+                           [class.bg-red-500]="driver.driverScore < 70"
+                           [style.width.%]="driver.driverScore"></div>
+                    </div>
+                  </div>
+                </div>
+              }
+            }
+          </div>
+        </div>
+
+        <div class="mt-6 pt-6 border-t border-outline-variant/30">
+          <h4 class="text-label-caps font-label-caps text-on-surface-variant uppercase mb-4">Risk Aggregates</h4>
+          <div class="flex justify-between text-body-sm mb-2 font-medium">
+            <span class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-green-500"></span> Safe Drivers (Score ≥ 85)</span>
+            <span class="font-bold text-primary">{{ safeDriversCount() }}</span>
+          </div>
+          <div class="flex justify-between text-body-sm mb-2 font-medium">
+            <span class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-orange-500"></span> Caution Required (70-84)</span>
+            <span class="font-bold text-primary">{{ cautionDriversCount() }}</span>
+          </div>
+          <div class="flex justify-between text-body-sm font-medium">
+            <span class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span> High Risk (Score < 70)</span>
+            <span class="font-bold text-primary">{{ highRiskDriversCount() }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Vehicle Replacement Recommendations Table -->
+    <div class="bg-surface-container-lowest rounded-xl border border-outline-variant/30 shadow-[0px_1px_3px_rgba(0,0,0,0.05)] overflow-hidden">
+      <div class="p-6 border-b border-outline-variant/30 flex justify-between items-center">
+        <div>
+          <h3 class="font-title-sm text-title-sm text-primary">Vehicle Replacement Recommendations</h3>
+          <p class="text-body-sm text-on-surface-variant">High-cost assets suggested for decommissioning based on maintenance ROI</p>
+        </div>
+        <span class="bg-primary/5 text-primary px-3 py-1 rounded text-body-sm font-bold flex items-center gap-2 border border-primary/10 select-none">
+          <span class="material-symbols-outlined text-sm">auto_awesome</span> AI Insights Active
+        </span>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+          <thead class="bg-surface-container-low border-b border-outline-variant/30">
+            <tr>
+              <th class="p-4 text-label-caps font-label-caps text-on-surface-variant uppercase text-[11px] font-bold">Vehicle Reg</th>
+              <th class="p-4 text-label-caps font-label-caps text-on-surface-variant uppercase text-[11px] font-bold">Model</th>
+              <th class="p-4 text-label-caps font-label-caps text-on-surface-variant uppercase text-[11px] font-bold">Odometer (Mileage)</th>
+              <th class="p-4 text-label-caps font-label-caps text-on-surface-variant uppercase text-[11px] font-bold">Maintenance Cost</th>
+              <th class="p-4 text-label-caps font-label-caps text-on-surface-variant uppercase text-[11px] font-bold">Expenses</th>
+              <th class="p-4 text-label-caps font-label-caps text-on-surface-variant uppercase text-[11px] font-bold">Replacement Status</th>
+              <th class="p-4 text-label-caps font-label-caps text-on-surface-variant uppercase text-[11px] font-bold">Reason</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-outline-variant/20 text-body-md">
+            @if (vehicleReplacements().length === 0) {
+              <tr>
+                <td colspan="7" class="p-8 text-center text-on-surface-variant font-body-md">
+                  No replacement candidates currently recommended.
+                </td>
+              </tr>
+            } @else {
+              @for (item of vehicleReplacements(); track item.vehicleId) {
+                <tr class="hover:bg-surface-container-low transition-colors duration-150">
+                  <td class="p-4 font-bold text-primary font-tabular-nums">{{ item.regNo }}</td>
+                  <td class="p-4 font-medium text-primary">{{ item.vehicleModelName || 'Unknown Model' }}</td>
+                  <td class="p-4 font-tabular-nums text-on-surface-variant">{{ item.currentOdometer | number }} km</td>
+                  <td class="p-4 font-bold text-error font-tabular-nums">{{ item.totalMaintenanceCost | currency:'USD':'symbol':'1.0-0' }}</td>
+                  <td class="p-4 font-semibold text-primary font-tabular-nums">{{ item.totalExpenses | currency:'USD':'symbol':'1.0-0' }}</td>
+                  <td class="p-4">
+                    @if (item.isRecommendedForReplacement) {
+                      <span class="bg-red-100 text-red-800 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase inline-flex items-center gap-1">
+                        <span class="w-1.5 h-1.5 rounded-full bg-red-600 animate-pulse"></span>
+                        Decommission
+                      </span>
+                    } @else {
+                      <span class="bg-green-100 text-green-800 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase inline-flex items-center gap-1">
+                        <span class="w-1.5 h-1.5 rounded-full bg-green-600"></span>
+                        Steady
+                      </span>
+                    }
+                  </td>
+                  <td class="p-4 text-on-surface-variant max-w-xs truncate font-medium" [title]="item.reason">{{ item.reason || 'N/A' }}</td>
+                </tr>
+              }
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+}
+</main>

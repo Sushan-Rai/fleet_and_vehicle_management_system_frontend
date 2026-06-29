@@ -1,0 +1,160 @@
+<!-- SideNavBar (Desktop Only) -->
+<aside class="hidden md:flex w-60 h-screen fixed left-0 top-0 bg-primary dark:bg-primary-container shadow-sm flex flex-col py-24 px-4 z-50">
+  <div class="mb-8 px-2">
+    <h1 class="text-title-sm font-title-sm text-on-primary dark:text-inverse-primary">FleetControl Pro</h1>
+    <p class="text-[10px] text-on-primary-fixed-variant opacity-70 tracking-wider">GLOBAL OPERATIONS</p>
+  </div>
+  <nav class="flex-1 space-y-1 overflow-y-auto custom-scrollbar">
+    @if (authService.userRole() !== 'Driver') {
+      <a class="flex items-center gap-3 px-3 py-2 text-on-primary-fixed-variant hover:bg-primary-fixed-variant/10 rounded-lg transition-colors" routerLink="/dashboard" routerLinkActive="bg-secondary-container !text-on-secondary-container font-bold" [routerLinkActiveOptions]="{exact: true}">
+        <span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+        <span class="font-body-md text-body-md">Dashboard</span>
+      </a>
+    }
+    <a class="flex items-center gap-3 px-3 py-2 text-on-primary-fixed-variant hover:bg-primary-fixed-variant/10 rounded-lg transition-colors" routerLink="/vehicles" routerLinkActive="bg-secondary-container !text-on-secondary-container font-bold">
+      <span class="material-symbols-outlined" data-icon="directions_car">directions_car</span>
+      <span class="font-body-md text-body-md">Vehicles</span>
+    </a>
+    <a class="flex items-center gap-3 px-3 py-2 text-on-primary-fixed-variant hover:bg-primary-fixed-variant/10 rounded-lg transition-colors" routerLink="/assignments" routerLinkActive="bg-secondary-container !text-on-secondary-container font-bold">
+      <span class="material-symbols-outlined" data-icon="assignment">assignment</span>
+      <span class="font-body-md text-body-md">Assignments</span>
+    </a>
+    @if (authService.userRole() !== 'Driver') {
+      <a class="flex items-center gap-3 px-3 py-2 text-on-primary-fixed-variant hover:bg-primary-fixed-variant/10 rounded-lg transition-colors" routerLink="/fuel-logs" routerLinkActive="bg-secondary-container !text-on-secondary-container font-bold">
+        <span class="material-symbols-outlined" data-icon="local_gas_station">local_gas_station</span>
+        <span class="font-body-md text-body-md">Fuel Logs</span>
+      </a>
+    }
+    @if (authService.userRole() !== 'Driver') {
+      <a class="flex items-center gap-3 px-3 py-2 text-on-primary-fixed-variant hover:bg-primary-fixed-variant/10 rounded-lg transition-colors" routerLink="/maintenance" routerLinkActive="bg-secondary-container !text-on-secondary-container font-bold">
+        <span class="material-symbols-outlined" data-icon="build">build</span>
+        <span class="font-body-md text-body-md">Maintenance</span>
+      </a>
+    }
+    @if (authService.userRole() === 'Admin') {
+      <a class="flex items-center gap-3 px-3 py-2 text-on-primary-fixed-variant hover:bg-primary-fixed-variant/10 rounded-lg transition-colors" routerLink="/expenses" routerLinkActive="bg-secondary-container !text-on-secondary-container font-bold">
+        <span class="material-symbols-outlined" data-icon="payments">payments</span>
+        <span class="font-body-md text-body-md">Expenses</span>
+      </a>
+    }
+    @if (authService.userRole() !== 'Driver') {
+      <a class="flex items-center gap-3 px-3 py-2 text-on-primary-fixed-variant hover:bg-primary-fixed-variant/10 rounded-lg transition-colors" routerLink="/analytics" routerLinkActive="bg-secondary-container !text-on-secondary-container font-bold">
+        <span class="material-symbols-outlined" data-icon="analytics">analytics</span>
+        <span class="font-body-md text-body-md">Analytics</span>
+      </a>
+    }
+    <a class="flex items-center gap-3 px-3 py-2 text-on-primary-fixed-variant hover:bg-primary-fixed-variant/10 rounded-lg transition-colors" routerLink="/damage" routerLinkActive="bg-secondary-container !text-on-secondary-container font-bold">
+      <span class="material-symbols-outlined" data-icon="report_problem">report_problem</span>
+      <span class="font-body-md text-body-md">Report Damage</span>
+    </a>
+    <a class="flex items-center gap-3 px-3 py-2 text-on-primary-fixed-variant hover:bg-primary-fixed-variant/10 rounded-lg transition-colors" routerLink="/settings" routerLinkActive="bg-secondary-container !text-on-secondary-container font-bold">
+      <span class="material-symbols-outlined" data-icon="settings">settings</span>
+      <span class="font-body-md text-body-md">Settings</span>
+    </a>
+  </nav>
+  <div class="mt-auto pt-4 border-t border-primary-fixed-variant/20 space-y-1">
+    <a (click)="onLogout()" class="flex items-center gap-3 px-3 py-2 text-on-primary-fixed-variant hover:bg-primary-fixed-variant/10 rounded-lg cursor-pointer">
+      <span class="material-symbols-outlined" data-icon="logout">logout</span>
+      <span class="font-body-md text-body-md">Sign Out</span>
+    </a>
+  </div>
+</aside>
+
+<!-- TopNavBar -->
+<header class="ml-0 md:ml-60 h-14 bg-surface-lowest dark:bg-surface-dim border-b border-outline-variant flex justify-between items-center px-4 md:px-6 sticky top-0 z-40">
+  <div class="flex-1"></div>
+  <div class="flex items-center gap-3 md:gap-6">
+    <div class="flex items-center gap-1 md:gap-2">
+      <button routerLink="/alerts" class="p-2 text-on-surface-variant hover:text-secondary transition-colors relative">
+        <span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+        @if (alertsService.unreadCount() > 0) {
+          <span class="absolute top-2 right-2 w-2 h-2 bg-error rounded-full border-2 border-surface-lowest"></span>
+        }
+      </button>
+      <button routerLink="/settings" class="hidden sm:inline-flex p-2 text-on-surface-variant hover:text-secondary transition-colors">
+        <span class="material-symbols-outlined" data-icon="settings_suggest">settings_suggest</span>
+      </button>
+    </div>
+    <div class="flex items-center gap-2 md:gap-3 border-l border-outline-variant pl-3 md:pl-6 cursor-pointer hover:opacity-80 transition-opacity" routerLink="/settings">
+      <div class="text-right hidden sm:block">
+        <p class="text-body-sm font-bold text-on-surface leading-none">{{ getUserName() }}</p>
+        <p class="text-[10px] text-on-surface-variant uppercase tracking-tighter">{{ getFormattedRole() }}</p>
+      </div>
+      <img alt="Manager Avatar" class="w-8 h-8 rounded-full border border-outline-variant object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBmSOychuiFYYeExBS1_zDqv_of0-oCoK6-zoKaaTT2GApuD_BUmWCReLUbXFDyR3DzrjPM6yxNXkw0510B7weCNc3JXHgD6cQOIf75UC-clHn9S_B4AAZq9VDL0D52dYAWGwsZN7Vl1dvCT8fO1TNTmvZ_oyV2EJ50A6f8blFTgYioycwSOpB_0RDD0Lun4m9mNGVvN_hhFRMwqU1pSFsnfItaEJvwL04uTId-rNB2_Y43u8k7elqaKwSbP8QGecDnE__1UGYn0xC6"/>
+    </div>
+  </div>
+</header>
+
+<!-- BottomNavBar (Mobile Only) -->
+<nav class="fixed bottom-0 left-0 w-full h-16 pb-safe bg-surface dark:bg-primary border-t border-outline-variant dark:border-outline shadow-lg rounded-t-xl md:hidden overflow-x-auto scrollbar-none z-50">
+  <div class="flex flex-nowrap items-center px-4 py-2 gap-2 min-w-max h-full">
+    
+    @if (authService.userRole() !== 'Driver') {
+      <a routerLink="/dashboard" routerLinkActive="bg-secondary-container !text-on-secondary-container font-bold" [routerLinkActiveOptions]="{exact: true}" class="flex flex-col items-center justify-center text-on-surface-variant dark:text-on-primary-fixed-variant rounded-full px-3 py-1 transition-transform duration-150 active:scale-90">
+        <span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+        <span class="font-label-caps text-[9px] font-bold uppercase mt-0.5">Dashboard</span>
+      </a>
+    }
+    
+    <a routerLink="/vehicles" routerLinkActive="bg-secondary-container !text-on-secondary-container font-bold" class="flex flex-col items-center justify-center text-on-surface-variant dark:text-on-primary-fixed-variant rounded-full px-3 py-1 transition-transform duration-150 active:scale-90 hover:bg-surface-container dark:hover:bg-primary-container">
+      <span class="material-symbols-outlined" data-icon="directions_car">directions_car</span>
+      <span class="font-label-caps text-[9px] font-bold uppercase mt-0.5">Vehicles</span>
+    </a>
+    
+    <a routerLink="/assignments" routerLinkActive="bg-secondary-container !text-on-secondary-container font-bold" class="flex flex-col items-center justify-center text-on-surface-variant dark:text-on-primary-fixed-variant rounded-full px-3 py-1 transition-transform duration-150 active:scale-90 hover:bg-surface-container dark:hover:bg-primary-container">
+      <span class="material-symbols-outlined" data-icon="assignment">assignment</span>
+      <span class="font-label-caps text-[9px] font-bold uppercase mt-0.5">Assignments</span>
+    </a>
+
+    @if (authService.userRole() !== 'Driver') {
+      <a routerLink="/fuel-logs" routerLinkActive="bg-secondary-container !text-on-secondary-container font-bold" class="flex flex-col items-center justify-center text-on-surface-variant dark:text-on-primary-fixed-variant rounded-full px-3 py-1 transition-transform duration-150 active:scale-90 hover:bg-surface-container dark:hover:bg-primary-container">
+        <span class="material-symbols-outlined" data-icon="local_gas_station">local_gas_station</span>
+        <span class="font-label-caps text-[9px] font-bold uppercase mt-0.5">Fuel Logs</span>
+      </a>
+
+      @if (authService.userRole() === 'Admin') {
+        <a routerLink="/expenses" routerLinkActive="bg-secondary-container !text-on-secondary-container font-bold" class="flex flex-col items-center justify-center text-on-surface-variant dark:text-on-primary-fixed-variant rounded-full px-3 py-1 transition-transform duration-150 active:scale-95 hover:bg-surface-container dark:hover:bg-primary-container">
+          <span class="material-symbols-outlined" data-icon="payments">payments</span>
+          <span class="font-label-caps text-[9px] font-bold uppercase mt-0.5">Expenses</span>
+        </a>
+      }
+
+      <a routerLink="/maintenance" routerLinkActive="bg-secondary-container !text-on-secondary-container font-bold" class="flex flex-col items-center justify-center text-on-surface-variant dark:text-on-primary-fixed-variant rounded-full px-3 py-1 transition-transform duration-150 active:scale-95 hover:bg-surface-container dark:hover:bg-primary-container">
+        <span class="material-symbols-outlined" data-icon="build">build</span>
+        <span class="font-label-caps text-[9px] font-bold uppercase mt-0.5">Maintenance</span>
+      </a>
+
+      <a routerLink="/analytics" routerLinkActive="bg-secondary-container !text-on-secondary-container font-bold" class="flex flex-col items-center justify-center text-on-surface-variant dark:text-on-primary-fixed-variant rounded-full px-3 py-1 transition-transform duration-150 active:scale-95 hover:bg-surface-container dark:hover:bg-primary-container">
+        <span class="material-symbols-outlined" data-icon="analytics">analytics</span>
+        <span class="font-label-caps text-[9px] font-bold uppercase mt-0.5">Analytics</span>
+      </a>
+    }
+
+    <a routerLink="/damage" routerLinkActive="bg-secondary-container !text-on-secondary-container font-bold" class="flex flex-col items-center justify-center text-on-surface-variant dark:text-on-primary-fixed-variant rounded-full px-3 py-1 transition-transform duration-150 active:scale-90 hover:bg-surface-container dark:hover:bg-primary-container">
+      <span class="material-symbols-outlined" data-icon="report_problem">report_problem</span>
+      <span class="font-label-caps text-[9px] font-bold uppercase mt-0.5">Damage</span>
+    </a>
+
+    <a routerLink="/settings" routerLinkActive="bg-secondary-container !text-on-secondary-container font-bold" class="flex flex-col items-center justify-center text-on-surface-variant dark:text-on-primary-fixed-variant rounded-full px-3 py-1 transition-transform duration-150 active:scale-90 hover:bg-surface-container dark:hover:bg-primary-container">
+      <span class="material-symbols-outlined" data-icon="settings">settings</span>
+      <span class="font-label-caps text-[9px] font-bold uppercase mt-0.5">Settings</span>
+    </a>
+
+    <a routerLink="/alerts" routerLinkActive="bg-secondary-container !text-on-secondary-container font-bold" class="flex flex-col items-center justify-center text-on-surface-variant dark:text-on-primary-fixed-variant rounded-full px-3 py-1 transition-transform duration-150 active:scale-90 hover:bg-surface-container dark:hover:bg-primary-container relative">
+      <span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+      <span class="font-label-caps text-[9px] font-bold uppercase mt-0.5">Alerts</span>
+      @if (alertsService.unreadCount() > 0) {
+        <span class="absolute top-1 right-2 px-1.5 py-0.5 bg-error text-white text-[8px] font-bold rounded-full">
+          {{ alertsService.unreadCount() }}
+        </span>
+      }
+    </a>
+
+    <a (click)="onLogout()" class="flex flex-col items-center justify-center text-on-surface-variant dark:text-on-primary-fixed-variant rounded-full px-3 py-1 transition-transform duration-150 active:scale-90 hover:bg-surface-container dark:hover:bg-primary-container cursor-pointer">
+      <span class="material-symbols-outlined" data-icon="logout">logout</span>
+      <span class="font-label-caps text-[9px] font-bold uppercase mt-0.5">Logout</span>
+    </a>
+
+  </div>
+</nav>
+

@@ -1,0 +1,556 @@
+<app-navbar></app-navbar>
+
+<!-- Top bar for Mobile Only -->
+<header class="md:hidden bg-surface-lowest dark:bg-primary-container border-b border-outline-variant fixed top-0 left-0 right-0 h-14 px-4 flex justify-between items-center z-40">
+  <div class="flex items-center gap-3">
+    <div class="w-8 h-8 rounded-full bg-secondary-fixed flex items-center justify-center overflow-hidden">
+      <img alt="Manager Avatar" class="w-full h-full object-cover"
+        src="https://lh3.googleusercontent.com/aida-public/AB6AXuBmSOychuiFYYeExBS1_zDqv_of0-oCoK6-zoKaaTT2GApuD_BUmWCReLUbXFDyR3DzrjPM6yxNXkw0510B7weCNc3JXHgD6cQOIf75UC-clHn9S_B4AAZq9VDL0D52dYAWGwsZN7Vl1dvCT8fO1TNTmvZ_oyV2EJ50A6f8blFTgYioycwSOpB_0RDD0Lun4m9mNGVvN_hhFRMwqU1pSFsnfItaEJvwL04uTId-rNB2_Y43u8k7elqaKwSbP8QGecDnE__1UGYn0xC6" />
+    </div>
+    <span class="font-bold text-primary dark:text-inverse-primary text-[18px]">FleetControl Pro</span>
+  </div>
+  <button class="p-2 text-on-surface-variant hover:text-secondary transition-colors relative">
+    <span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+    <span class="absolute top-2 right-2 w-2 h-2 bg-error rounded-full border-2 border-surface-lowest"></span>
+  </button>
+</header>
+
+<main class="ml-0 md:ml-60 pt-16 md:pt-6 p-4 md:p-6 pb-24 md:pb-6 space-y-6">
+  <!-- Page Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div>
+      <h2 class="font-display-lg text-display-lg text-primary">Vehicle Assignments</h2>
+      <p class="text-on-surface-variant font-body-md">Dispatch, monitor, and update driver assignments across the fleet network.</p>
+    </div>
+    @if (authService.userRole() !== 'Driver') {
+    <div class="flex items-center gap-3 self-end sm:self-auto">
+      <button (click)="openDispatchModal()"
+        class="flex h-9 px-4 bg-secondary text-on-secondary font-label-caps text-label-caps rounded items-center gap-2 hover:brightness-110 transition-all active:scale-95">
+        <span class="material-symbols-outlined text-[18px]" data-icon="add">add</span>
+        New Dispatch
+      </button>
+    </div>
+    }
+  </div>
+
+
+  <!-- Active Assignments Section -->
+  <div class="space-y-4">
+    <div class="bg-surface-container-lowest border border-outline-variant/30 rounded-xl shadow-sm p-4 md:p-6">
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
+        <div>
+          <h3 class="font-title-sm text-title-sm text-primary font-bold">Active Dispatches</h3>
+          <p class="text-body-sm text-on-surface-variant">Scheduled and In Transit vehicles currently active in the system</p>
+        </div>
+        <!-- Redux Filter Chip Controls -->
+        <div class="flex gap-2">
+          <button (click)="setFilter('All')" 
+            [class.bg-secondary-container]="activeFilter() === 'All'" 
+            [class.text-on-secondary-container]="activeFilter() === 'All'" 
+            [class.bg-surface-container]="activeFilter() !== 'All'" 
+            class="px-3 py-1 rounded-full font-label-caps text-[10px] font-bold uppercase transition-all duration-150 border border-transparent">
+            All Active
+          </button>
+          <button (click)="setFilter('Scheduled')" 
+            [class.bg-secondary-container]="activeFilter() === 'Scheduled'" 
+            [class.text-on-secondary-container]="activeFilter() === 'Scheduled'" 
+            [class.bg-surface-container]="activeFilter() !== 'Scheduled'" 
+            class="px-3 py-1 rounded-full font-label-caps text-[10px] font-bold uppercase transition-all duration-150 border border-outline-variant/30">
+            Scheduled
+          </button>
+          <button (click)="setFilter('InTransit')" 
+            [class.bg-secondary-container]="activeFilter() === 'InTransit'" 
+            [class.text-on-secondary-container]="activeFilter() === 'InTransit'" 
+            [class.bg-surface-container]="activeFilter() !== 'InTransit'" 
+            class="px-3 py-1 rounded-full font-label-caps text-[10px] font-bold uppercase transition-all duration-150 border border-outline-variant/30">
+            In Transit
+          </button>
+        </div>
+      </div>
+
+      <!-- Desktop Active Assignments Table -->
+      <div class="overflow-x-auto">
+        <table class="w-full border-collapse text-left">
+          <thead>
+            <tr class="bg-surface-container-low border-b border-outline-variant/30">
+              <th class="p-4 font-label-caps text-[11px] font-bold uppercase tracking-wider text-on-surface-variant">Vehicle</th>
+              <th class="p-4 font-label-caps text-[11px] font-bold uppercase tracking-wider text-on-surface-variant">Driver</th>
+              <th class="p-4 font-label-caps text-[11px] font-bold uppercase tracking-wider text-on-surface-variant">Destination</th>
+              <th class="p-4 font-label-caps text-[11px] font-bold uppercase tracking-wider text-on-surface-variant">Status</th>
+              <th class="p-4 font-label-caps text-[11px] font-bold uppercase tracking-wider text-on-surface-variant">ETAs</th>
+              @if (isDriver()) {
+              <th class="p-4 font-label-caps text-[11px] font-bold uppercase tracking-wider text-on-surface-variant text-right">Actions</th>
+              }
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-outline-variant/20">
+            @if (loading() && activeAssignments().length === 0) {
+            <tr>
+              <td colspan="6" class="p-8 text-center">
+                <div class="w-8 h-8 rounded-full border-2 border-outline-variant border-t-secondary animate-spin mx-auto"></div>
+                <p class="text-on-surface-variant text-body-sm mt-2">Loading active dispatches...</p>
+              </td>
+            </tr>
+            } @else if (activeAssignments().length === 0) {
+            <tr>
+              <td colspan="6" class="p-8 text-center text-on-surface-variant font-body-md">
+                No active assignments matching filter.
+              </td>
+            </tr>
+            } @else {
+            @for (item of activeAssignments(); track item.id) {
+            <tr [class.bg-secondary-fixed/10]="selectedRowId() === item.id" (click)="selectRow(item.id)"
+              class="hover:bg-surface-container-low transition-colors cursor-pointer duration-150">
+              <td class="p-4">
+                <div class="flex items-center gap-2">
+                  <span class="material-symbols-outlined text-on-surface-variant" data-icon="local_shipping">local_shipping</span>
+                  <div>
+                    <p class="font-bold text-primary font-tabular-nums">{{ item.vehicleName || 'Vehicle Asset' }}</p>
+                    <p class="text-[10px] text-on-surface-variant">ID: {{ item.vehicleId | slice:0:8 }}...</p>
+                  </div>
+                </div>
+              </td>
+              <td class="p-4">
+                <p class="font-semibold text-primary">{{ item.driverName || 'Assigned Driver' }}</p>
+                <p class="text-[10px] text-on-surface-variant">ID: {{ item.driverId | slice:0:8 }}...</p>
+              </td>
+              <td class="p-4">
+                <div class="flex items-center gap-1">
+                  <span class="material-symbols-outlined text-secondary text-sm" data-icon="location_on">location_on</span>
+                  <span class="font-medium text-body-md text-primary">{{ getLocationName(item.destinationLocationId) }}</span>
+                </div>
+              </td>
+              <td class="p-4">
+                @if (item.status === 'Scheduled') {
+                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800 uppercase inline-flex items-center gap-1">
+                  <span class="w-1.5 h-1.5 rounded-full bg-blue-600"></span>
+                  Scheduled
+                </span>
+                } @else {
+                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 uppercase inline-flex items-center gap-1">
+                  <span class="w-1.5 h-1.5 rounded-full bg-amber-600 animate-pulse"></span>
+                  In Transit
+                </span>
+                }
+              </td>
+              <td class="p-4">
+                <div class="space-y-0.5 text-xs text-on-surface-variant font-tabular-nums">
+                  <p><span class="font-semibold text-primary">Dep:</span> {{ item.scheduledDeparture | date:'short' }}</p>
+                  <p><span class="font-semibold text-primary">Arr:</span> {{ item.scheduledArrival | date:'short' }}</p>
+                </div>
+              </td>
+              @if (isDriver()) {
+              <td class="p-4 text-right">
+                <div class="flex justify-end gap-2" (click)="$event.stopPropagation()">
+                  @if (item.status === 'Scheduled') {
+                  <button (click)="accept(item)"
+                    class="h-8 px-3 bg-secondary text-on-secondary hover:brightness-110 text-xs font-bold rounded flex items-center gap-1 transition-all active:scale-95">
+                    <span class="material-symbols-outlined text-xs" data-icon="done">done</span> Accept
+                  </button>
+                  <button (click)="reject(item)"
+                    class="h-8 px-3 border border-error text-error hover:bg-error/5 text-xs font-bold rounded flex items-center gap-1 transition-all active:scale-95">
+                    <span class="material-symbols-outlined text-xs" data-icon="close">close</span> Reject
+                  </button>
+                  } @else {
+                  <button (click)="arrive(item)"
+                    class="h-8 px-3 bg-teal-600 text-white hover:bg-teal-700 text-xs font-bold rounded flex items-center gap-1 transition-all active:scale-95">
+                    <span class="material-symbols-outlined text-xs" data-icon="sports_motorsports">sports_motorsports</span> Arrived
+                  </button>
+                  <a [routerLink]="['/fuel-logs']" [queryParams]="{ vehicleId: item.vehicleId, open: 'true' }"
+                    class="h-8 px-3 bg-secondary text-on-secondary hover:brightness-110 text-xs font-bold rounded flex items-center gap-1 transition-all active:scale-95 select-none">
+                    <span class="material-symbols-outlined text-xs" data-icon="local_gas_station">local_gas_station</span> Log Fuel
+                  </a>
+                  <a [routerLink]="['/damage']" [queryParams]="{ vehicleId: item.vehicleId }"
+                    class="h-8 px-3 bg-error text-on-error hover:brightness-110 text-xs font-bold rounded flex items-center gap-1 transition-all active:scale-95 select-none">
+                    <span class="material-symbols-outlined text-xs" data-icon="report_problem">report_problem</span> Damage
+                  </a>
+                  }
+                </div>
+              </td>
+              }
+            </tr>
+            }
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Assignment History Panel (Full Width Below) -->
+  <div class="bg-surface-container-lowest border border-outline-variant/30 rounded-xl shadow-sm p-4 md:p-6">
+    <div class="mb-6">
+      <h3 class="font-title-sm text-title-sm text-primary font-bold">Assignment History</h3>
+      <p class="text-body-sm text-on-surface-variant">Archived history of completed and rejected dispatches</p>
+    </div>
+
+    <!-- Desktop History Table -->
+    <div class="overflow-x-auto">
+      <table class="w-full border-collapse text-left">
+        <thead>
+          <tr class="bg-surface-container-low border-b border-outline-variant/30">
+            <th class="p-4 font-label-caps text-[11px] font-bold uppercase tracking-wider text-on-surface-variant">Vehicle</th>
+            <th class="p-4 font-label-caps text-[11px] font-bold uppercase tracking-wider text-on-surface-variant">Driver</th>
+            <th class="p-4 font-label-caps text-[11px] font-bold uppercase tracking-wider text-on-surface-variant">Destination</th>
+            <th class="p-4 font-label-caps text-[11px] font-bold uppercase tracking-wider text-on-surface-variant">Status</th>
+            <th class="p-4 font-label-caps text-[11px] font-bold uppercase tracking-wider text-on-surface-variant">Scheduled Dates</th>
+            <th class="p-4 font-label-caps text-[11px] font-bold uppercase tracking-wider text-on-surface-variant">Actual Dates</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-outline-variant/20">
+          @if (historyAssignments().length === 0) {
+          <tr>
+            <td colspan="6" class="p-8 text-center text-on-surface-variant font-body-md">
+              No historical assignment records found.
+            </td>
+          </tr>
+          } @else {
+          @for (item of historyAssignments(); track item.id) {
+          <tr [class.bg-secondary-fixed/10]="selectedRowId() === item.id" (click)="selectRow(item.id)"
+            class="hover:bg-surface-container-low transition-colors cursor-pointer duration-150">
+            <td class="p-4">
+              <div class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-on-surface-variant" data-icon="local_shipping">local_shipping</span>
+                <div>
+                  <p class="font-bold text-primary font-tabular-nums">{{ item.vehicleName || 'Vehicle Asset' }}</p>
+                  <p class="text-[10px] text-on-surface-variant">ID: {{ item.vehicleId | slice:0:8 }}...</p>
+                </div>
+              </div>
+            </td>
+            <td class="p-4">
+              <p class="font-semibold text-primary">{{ item.driverName || 'Assigned Driver' }}</p>
+              <p class="text-[10px] text-on-surface-variant">ID: {{ item.driverId | slice:0:8 }}...</p>
+            </td>
+            <td class="p-4">
+              <div class="flex items-center gap-1">
+                <span class="material-symbols-outlined text-secondary text-sm" data-icon="location_on">location_on</span>
+                <span class="font-medium text-body-md text-primary">{{ getLocationName(item.destinationLocationId) }}</span>
+              </div>
+            </td>
+            <td class="p-4">
+              @if (item.status === 'Completed') {
+              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-green-100 text-green-800 uppercase inline-flex items-center gap-1">
+                <span class="w-1.5 h-1.5 rounded-full bg-green-600"></span>
+                Completed
+              </span>
+              } @else {
+              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-red-100 text-red-800 uppercase inline-flex items-center gap-1">
+                <span class="w-1.5 h-1.5 rounded-full bg-red-600"></span>
+                Rejected
+              </span>
+              }
+            </td>
+            <td class="p-4">
+              <div class="space-y-0.5 text-xs text-on-surface-variant font-tabular-nums">
+                <p><span class="font-semibold text-primary">Dep:</span> {{ item.scheduledDeparture | date:'short' }}</p>
+                <p><span class="font-semibold text-primary">Arr:</span> {{ item.scheduledArrival | date:'short' }}</p>
+              </div>
+            </td>
+            <td class="p-4">
+              <div class="space-y-0.5 text-xs text-on-surface-variant font-tabular-nums">
+                <p><span class="font-semibold text-primary">Dep:</span> {{ item.actualDeparture ? (item.actualDeparture | date:'short') : 'N/A' }}</p>
+                <p><span class="font-semibold text-primary">Arr:</span> {{ item.actualArrival ? (item.actualArrival | date:'short') : 'N/A' }}</p>
+              </div>
+            </td>
+          </tr>
+          }
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</main>
+
+<!-- New Dispatch Modal Overlay -->
+@if (isDispatchModalOpen()) {
+<div class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
+  <div class="bg-surface-container-lowest border border-outline-variant/30 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+    <!-- Header -->
+    <div class="p-6 border-b border-outline-variant/20 flex justify-between items-center bg-surface-container-low">
+      <h3 class="font-title-sm text-title-sm text-primary font-bold">New Vehicle Dispatch</h3>
+      <button (click)="closeDispatchModal()" class="p-1 hover:bg-surface-variant rounded-full text-on-surface-variant">
+        <span class="material-symbols-outlined" data-icon="close">close</span>
+      </button>
+    </div>
+
+    <!-- Body / Form -->
+    <form [formGroup]="dispatchForm" (ngSubmit)="onSubmit()" class="p-6 space-y-4 overflow-y-auto custom-scrollbar flex-1">
+      <!-- Error Message Banner -->
+      @if (dispatchErrorMessage()) {
+      <div class="p-3 bg-error-container text-on-error-container rounded-lg text-body-sm font-semibold flex items-center gap-2">
+        <span class="material-symbols-outlined text-[18px]" data-icon="error">error</span>
+        <span class="flex-1">{{ dispatchErrorMessage() }}</span>
+      </div>
+      }
+
+      <!-- Start Location Select -->
+      <div class="space-y-1.5">
+        <label class="block text-body-sm font-bold text-on-surface-variant">Start Location</label>
+        <select formControlName="startLocationId"
+          class="w-full h-10 px-3 bg-surface-container-low border border-outline-variant/30 rounded-lg text-body-md focus:ring-2 focus:ring-secondary-container outline-none disabled:opacity-75 disabled:cursor-not-allowed">
+          @if (!isFleetManager()) {
+            <option value="">Select Start Location</option>
+          }
+          @for (loc of routeLocations(); track loc.id) {
+          <option [value]="loc.id">{{ loc.location }}</option>
+          }
+        </select>
+        @if (dispatchForm.get('startLocationId')?.touched && dispatchForm.get('startLocationId')?.invalid) {
+        <p class="text-error text-[11px] font-semibold flex items-center gap-1">
+          <span class="material-symbols-outlined text-[14px]">error</span>
+          Start location is required to load assets.
+        </p>
+        }
+      </div>
+
+      <!-- Driver Dropdown (restricted to start location) -->
+      <div class="space-y-1.5">
+        <label class="block text-body-sm font-bold text-on-surface-variant">Available Driver</label>
+        <select formControlName="driverId"
+          [disabled]="!selectedStartLocationId()"
+          class="w-full h-10 px-3 bg-surface-container-low border border-outline-variant/30 rounded-lg text-body-md focus:ring-2 focus:ring-secondary-container outline-none disabled:opacity-50 disabled:cursor-not-allowed">
+          @if (!selectedStartLocationId()) {
+            <option value="">Select start location first</option>
+          } @else if (availableDrivers().length === 0) {
+            <option value="">No idle/active drivers at start location</option>
+          } @else {
+            <option value="">Select Available Driver</option>
+            @for (driver of availableDrivers(); track driver.id) {
+            <option [value]="driver.id">{{ driver.firstName }} {{ driver.lastName }} (Score: {{ driver.currentDriverScore }})</option>
+            }
+          }
+        </select>
+        @if (dispatchForm.get('driverId')?.touched && dispatchForm.get('driverId')?.invalid) {
+        <p class="text-error text-[11px] font-semibold flex items-center gap-1">
+          <span class="material-symbols-outlined text-[14px]">error</span>
+          Driver is required.
+        </p>
+        }
+      </div>
+
+      <!-- Vehicle Dropdown (restricted to start location) -->
+      <div class="space-y-1.5">
+        <label class="block text-body-sm font-bold text-on-surface-variant">Available Vehicle</label>
+        <select formControlName="vehicleId"
+          [disabled]="!selectedStartLocationId()"
+          class="w-full h-10 px-3 bg-surface-container-low border border-outline-variant/30 rounded-lg text-body-md focus:ring-2 focus:ring-secondary-container outline-none disabled:opacity-50 disabled:cursor-not-allowed">
+          @if (!selectedStartLocationId()) {
+            <option value="">Select start location first</option>
+          } @else if (availableVehicles().length === 0) {
+            <option value="">No active vehicles at start location</option>
+          } @else {
+            <option value="">Select Available Vehicle</option>
+            @for (vehicle of availableVehicles(); track vehicle.id) {
+            <option [value]="vehicle.id">{{ vehicle.regNo }} - {{ vehicle.modelName || 'Unknown Model' }}</option>
+            }
+          }
+        </select>
+        @if (dispatchForm.get('vehicleId')?.touched && dispatchForm.get('vehicleId')?.invalid) {
+        <p class="text-error text-[11px] font-semibold flex items-center gap-1">
+          <span class="material-symbols-outlined text-[14px]">error</span>
+          Vehicle is required.
+        </p>
+        }
+      </div>
+
+      <!-- Destination Location Select -->
+      <div class="space-y-1.5">
+        <label class="block text-body-sm font-bold text-on-surface-variant">Destination Location</label>
+        <select formControlName="destinationLocationId"
+          class="w-full h-10 px-3 bg-surface-container-low border border-outline-variant/30 rounded-lg text-body-md focus:ring-2 focus:ring-secondary-container outline-none">
+          <option value="">Select Destination Location</option>
+          @for (loc of routeLocations(); track loc.id) {
+          <option [value]="loc.id">{{ loc.location }}</option>
+          }
+        </select>
+        @if (dispatchForm.get('destinationLocationId')?.touched && dispatchForm.get('destinationLocationId')?.invalid) {
+        <p class="text-error text-[11px] font-semibold flex items-center gap-1">
+          <span class="material-symbols-outlined text-[14px]">error</span>
+          Destination location is required.
+        </p>
+        }
+      </div>
+
+      <!-- Scheduled Departure Time -->
+      <div class="space-y-1.5">
+        <label class="block text-body-sm font-bold text-on-surface-variant">Scheduled Departure</label>
+        <input formControlName="scheduledDeparture"
+          class="w-full h-10 px-3 bg-surface-container-low border border-outline-variant/30 rounded-lg text-body-md focus:ring-2 focus:ring-secondary-container outline-none"
+          type="datetime-local" />
+        @if (dispatchForm.get('scheduledDeparture')?.touched && dispatchForm.get('scheduledDeparture')?.hasError('required')) {
+        <p class="text-error text-[11px] font-semibold flex items-center gap-1">
+          <span class="material-symbols-outlined text-[14px]">error</span>
+          Departure date and time is required.
+        </p>
+        }
+        @if (dispatchForm.get('scheduledDeparture')?.touched && dispatchForm.hasError('departureInPast')) {
+        <p class="text-error text-[11px] font-semibold flex items-center gap-1">
+          <span class="material-symbols-outlined text-[14px]">error</span>
+          Scheduled departure date must be today or in the future.
+        </p>
+        }
+      </div>
+
+      <!-- Scheduled Arrival Time -->
+      <div class="space-y-1.5">
+        <label class="block text-body-sm font-bold text-on-surface-variant">Scheduled Arrival (ETA)</label>
+        <input formControlName="scheduledArrival"
+          class="w-full h-10 px-3 bg-surface-container-low border border-outline-variant/30 rounded-lg text-body-md focus:ring-2 focus:ring-secondary-container outline-none"
+          type="datetime-local" />
+        @if (dispatchForm.get('scheduledArrival')?.touched && dispatchForm.get('scheduledArrival')?.hasError('required')) {
+        <p class="text-error text-[11px] font-semibold flex items-center gap-1">
+          <span class="material-symbols-outlined text-[14px]">error</span>
+          Expected arrival date and time is required.
+        </p>
+        }
+        @if (dispatchForm.get('scheduledArrival')?.touched && dispatchForm.hasError('arrivalBeforeDeparture')) {
+        <p class="text-error text-[11px] font-semibold flex items-center gap-1">
+          <span class="material-symbols-outlined text-[14px]">error</span>
+          Scheduled arrival must be after scheduled departure.
+        </p>
+        }
+      </div>
+
+      <!-- Modal Footer / Actions -->
+      <div class="pt-4 flex justify-end gap-3 border-t border-outline-variant/20 mt-6">
+        <button type="button" (click)="closeDispatchModal()"
+          class="h-10 px-4 border border-outline-variant/30 hover:bg-surface-container text-on-surface font-label-caps text-label-caps rounded transition-colors">
+          Cancel
+        </button>
+        <button type="submit"
+          class="h-10 px-4 bg-secondary hover:brightness-110 text-on-secondary font-label-caps text-label-caps rounded transition-all active:scale-95">
+          Publish Dispatch
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+}
+
+<!-- Vehicle Assignment Details Modal Overlay -->
+@if (isDetailsModalOpen()) {
+<div class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
+  <div class="bg-surface-container-lowest border border-outline-variant/30 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+    <!-- Header -->
+    <div class="p-6 border-b border-outline-variant/20 flex justify-between items-center bg-surface-container-low">
+      <h3 class="font-title-sm text-title-sm text-primary font-bold">Assignment Details</h3>
+      <button (click)="closeDetailsModal()" class="p-1 hover:bg-surface-variant rounded-full text-on-surface-variant">
+        <span class="material-symbols-outlined" data-icon="close">close</span>
+      </button>
+    </div>
+
+    <!-- Body -->
+    <div class="p-6 space-y-4 overflow-y-auto custom-scrollbar flex-1">
+      @if (detailsLoading()) {
+      <div class="flex flex-col items-center justify-center py-12 text-center">
+        <div class="w-10 h-10 rounded-full border-4 border-outline-variant border-t-secondary animate-spin"></div>
+        <p class="text-on-surface-variant font-body-sm mt-3">Fetching assignment details...</p>
+      </div>
+      } @else if (detailsError()) {
+      <div class="p-4 bg-error-container text-on-error-container rounded-lg text-body-sm font-semibold flex items-center gap-2">
+        <span class="material-symbols-outlined text-[18px]" data-icon="error">error</span>
+        <span class="flex-1">{{ detailsError() }}</span>
+      </div>
+      } @else if (selectedAssignmentDetails(); as details) {
+      <div class="space-y-4">
+        <!-- Vehicle Section -->
+        <div class="border-b border-outline-variant/10 pb-3">
+          <span class="block text-[11px] font-bold text-on-surface-variant uppercase tracking-wider">Vehicle</span>
+          <span class="text-headline-sm font-headline-md text-primary font-bold tracking-tight">{{ details.vehicleName || 'Vehicle Asset' }}</span>
+          <span class="block text-[10px] text-on-surface-variant font-mono mt-0.5">ID: {{ details.vehicleId }}</span>
+        </div>
+
+        <!-- Driver Section -->
+        <div class="border-b border-outline-variant/10 pb-3">
+          <span class="block text-[11px] font-bold text-on-surface-variant uppercase tracking-wider">Assigned Driver</span>
+          <span class="text-body-md font-semibold text-primary">{{ details.driverName || 'Assigned Driver' }}</span>
+          <span class="block text-[10px] text-on-surface-variant font-mono mt-0.5">ID: {{ details.driverId }}</span>
+        </div>
+
+        <!-- Route & Destination Location -->
+        <div class="border-b border-outline-variant/10 pb-3">
+          <span class="block text-[11px] font-bold text-on-surface-variant uppercase tracking-wider">Destination Hub</span>
+          <div class="flex items-center gap-1.5 mt-0.5">
+            <span class="material-symbols-outlined text-secondary text-sm" data-icon="location_on">location_on</span>
+            <span class="text-body-md font-semibold text-primary">{{ details.routeName || getLocationName(details.destinationLocationId) }}</span>
+          </div>
+          <span class="block text-[10px] text-on-surface-variant font-mono mt-0.5">Location ID: {{ details.destinationLocationId }}</span>
+        </div>
+
+        <!-- Status -->
+        <div class="grid grid-cols-2 gap-4 border-b border-outline-variant/10 pb-3">
+          <div>
+            <span class="block text-[11px] font-bold text-on-surface-variant uppercase tracking-wider">Current Status</span>
+            <div class="mt-1">
+              @if (details.status === 'Scheduled') {
+              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800 uppercase inline-flex items-center gap-1">
+                <span class="w-1.5 h-1.5 rounded-full bg-blue-600"></span>
+                Scheduled
+              </span>
+              } @else if (details.status === 'In Transit' || details.status === 'InTransit') {
+              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 uppercase inline-flex items-center gap-1">
+                <span class="w-1.5 h-1.5 rounded-full bg-amber-600 animate-pulse"></span>
+                In Transit
+              </span>
+              } @else if (details.status === 'Completed') {
+              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-green-100 text-green-800 uppercase inline-flex items-center gap-1">
+                <span class="w-1.5 h-1.5 rounded-full bg-green-600"></span>
+                Completed
+              </span>
+              } @else if (details.status === 'Rejected') {
+              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-red-100 text-red-800 uppercase inline-flex items-center gap-1">
+                <span class="w-1.5 h-1.5 rounded-full bg-red-600"></span>
+                Rejected
+              </span>
+              } @else {
+              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-outline-variant text-on-surface-variant uppercase inline-flex items-center gap-1">
+                <span class="w-1.5 h-1.5 rounded-full bg-on-surface-variant"></span>
+                {{ details.status }}
+              </span>
+              }
+            </div>
+          </div>
+        </div>
+
+        <!-- Timestamps -->
+        <div class="grid grid-cols-2 gap-4 border-b border-outline-variant/10 pb-3">
+          <div>
+            <span class="block text-[11px] font-bold text-on-surface-variant uppercase tracking-wider">Scheduled Departure</span>
+            <span class="text-xs font-semibold text-primary font-tabular-nums">{{ details.scheduledDeparture | date:'short' }}</span>
+          </div>
+          <div>
+            <span class="block text-[11px] font-bold text-on-surface-variant uppercase tracking-wider">Scheduled Arrival</span>
+            <span class="text-xs font-semibold text-primary font-tabular-nums">{{ details.scheduledArrival | date:'short' }}</span>
+          </div>
+        </div>
+
+        <!-- Actual Timestamps -->
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <span class="block text-[11px] font-bold text-on-surface-variant uppercase tracking-wider">Actual Departure</span>
+            <span class="text-xs font-semibold text-primary font-tabular-nums">{{ details.actualDeparture ? (details.actualDeparture | date:'short') : 'N/A' }}</span>
+          </div>
+          <div>
+            <span class="block text-[11px] font-bold text-on-surface-variant uppercase tracking-wider">Actual Arrival</span>
+            <span class="text-xs font-semibold text-primary font-tabular-nums">{{ details.actualArrival ? (details.actualArrival | date:'short') : 'N/A' }}</span>
+          </div>
+        </div>
+
+        <!-- System ID -->
+        <div class="border-t border-outline-variant/10 pt-3 text-[10px] text-on-surface-variant/70 font-mono">
+          <span>Assignment ID: {{ details.id }}</span>
+        </div>
+      </div>
+      }
+    </div>
+
+    <!-- Footer -->
+    <div class="p-4 flex justify-end border-t border-outline-variant/20 bg-surface-container-low">
+      <button type="button" (click)="closeDetailsModal()"
+        class="h-10 px-4 bg-secondary hover:brightness-110 text-on-secondary font-label-caps text-label-caps rounded transition-all active:scale-95">
+        Close
+      </button>
+    </div>
+  </div>
+</div>
+}

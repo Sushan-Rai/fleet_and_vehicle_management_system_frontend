@@ -1,0 +1,410 @@
+<app-navbar></app-navbar>
+
+<main class="ml-0 md:ml-60 pt-16 md:pt-6 p-4 md:p-6 pb-24 md:pb-6 space-y-6">
+  <!-- Page Header -->
+  <div class="flex flex-col gap-1">
+    <h2 class="font-display-lg text-display-lg text-primary">Settings & Configuration</h2>
+    <p class="text-on-surface-variant font-body-md">Manage system parameters, live notifications thresholds, and pending user approvals.</p>
+  </div>
+
+  @if (isLoading()) {
+  <div class="flex flex-col items-center justify-center py-12 text-center">
+    <div class="w-12 h-12 rounded-full border-4 border-outline-variant border-t-secondary animate-spin"></div>
+    <p class="text-on-surface-variant font-body-sm mt-3 font-semibold">Loading system settings...</p>
+  </div>
+  } @else {
+  <!-- Hero and Status Row -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div class="md:col-span-2 bg-primary-container text-on-primary-container p-6 rounded-xl shadow-sm relative overflow-hidden flex flex-col justify-center">
+      <div class="relative z-10">
+        <h3 class="text-headline-md font-headline-md mb-2">System Parameters</h3>
+        <p class="text-on-primary-container/80 max-w-md font-body-md">Configure notification thresholds, fuel thresholds, and approve new operators from this console.</p>
+      </div>
+    </div>
+    
+    <!-- System Status Card (without run diagnostics) -->
+    <div class="bg-surface-container-lowest border border-outline-variant p-6 rounded-xl flex flex-col justify-between shadow-[0px_1px_3px_rgba(0,0,0,0.05)]">
+      <div>
+        <p class="text-label-caps font-label-caps text-on-surface-variant mb-4">SYSTEM STATUS</p>
+        <div class="flex items-center gap-3 mb-2">
+          <span class="w-3 h-3 bg-emerald-500 rounded-full animate-pulse"></span>
+          <span class="text-title-sm font-title-sm text-primary">All Systems Nominal</span>
+        </div>
+        <p class="text-body-sm text-on-surface-variant mt-1">{{ systemStatus().lastBackup }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bento Grid Settings Sections -->
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+    <!-- Alert Preferences Form -->
+    @if (authService.userRole() !== 'Driver') {
+    <section class="lg:col-span-12 bg-surface-container-lowest border border-outline-variant rounded-xl p-6 shadow-sm">
+      <div class="flex items-center justify-between mb-6">
+        <div class="flex items-center gap-3">
+          <span class="material-symbols-outlined text-secondary" data-icon="notifications_active">notifications_active</span>
+          <h3 class="text-title-sm font-title-sm text-primary">Alert Preferences</h3>
+        </div>
+        <span class="text-[11px] px-2 py-0.5 bg-secondary-fixed text-on-secondary-fixed font-bold rounded uppercase animate-pulse">Live Sync</span>
+      </div>
+
+      <!-- Feedback Banners -->
+      @if (successMessage()) {
+      <div class="mb-4 p-3 bg-secondary-container text-on-secondary-container rounded-lg text-body-sm font-semibold flex items-center gap-2">
+        <span class="material-symbols-outlined text-[18px]" data-icon="check_circle">check_circle</span>
+        <span>{{ successMessage() }}</span>
+      </div>
+      }
+      @if (error()) {
+      <div class="mb-4 p-3 bg-error-container text-on-error-container rounded-lg text-body-sm font-semibold flex items-center gap-2">
+        <span class="material-symbols-outlined text-[18px]" data-icon="error">error</span>
+        <span>{{ error() }}</span>
+      </div>
+      }
+
+      <form [formGroup]="alertForm" (ngSubmit)="onSubmitAlertPreferences()" class="space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          
+          <!-- Fuel Level Preference -->
+          <div class="space-y-3 p-4 bg-surface-container-low rounded-xl border border-outline-variant/30">
+            <div class="flex items-center justify-between">
+              <label class="text-body-md font-bold text-primary">Alert on Abnormal Fuel</label>
+              <button type="button" 
+                (click)="alertForm.patchValue({alertOnAbnormalFuel: !alertForm.get('alertOnAbnormalFuel')?.value})"
+                [class.bg-secondary]="alertForm.get('alertOnAbnormalFuel')?.value"
+                [class.bg-surface-variant]="!alertForm.get('alertOnAbnormalFuel')?.value"
+                class="w-10 h-5 rounded-full relative transition-colors duration-200 outline-none">
+                <span 
+                  [class.translate-x-5]="alertForm.get('alertOnAbnormalFuel')?.value"
+                  [class.translate-x-0.5]="!alertForm.get('alertOnAbnormalFuel')?.value"
+                  class="absolute left-0 top-0.5 w-4 h-4 bg-white rounded-full transition-transform duration-200 shadow-sm block"></span>
+              </button>
+            </div>
+            <p class="text-[11px] text-on-surface-variant">Triggers immediate alert when unusual fuel level drop is detected.</p>
+            
+            <div class="pt-3 space-y-2" [class.opacity-50]="!alertForm.get('alertOnAbnormalFuel')?.value">
+              <label class="block text-[11px] font-bold text-on-surface-variant uppercase tracking-wider">Fuel Efficiency Threshold (%)</label>
+              <div class="flex items-center gap-4">
+                <input type="range" min="1" max="100" formControlName="fuelEfficiencyThreshold"
+                  [attr.disabled]="!alertForm.get('alertOnAbnormalFuel')?.value ? true : null"
+                  class="flex-1 h-1.5 bg-surface-variant rounded-lg appearance-none cursor-pointer accent-secondary"/>
+                <span class="text-tabular-nums font-tabular-nums bg-surface-container px-2.5 py-1 rounded border border-outline-variant text-[13px] font-bold text-primary min-w-[50px] text-center">
+                  {{ alertForm.get('fuelEfficiencyThreshold')?.value }}%
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Maintenance Level Preference -->
+          <div class="space-y-3 p-4 bg-surface-container-low rounded-xl border border-outline-variant/30">
+            <div class="flex items-center justify-between">
+              <label class="text-body-md font-bold text-primary">Maintenance Warning</label>
+              <button type="button" 
+                (click)="alertForm.patchValue({alertOnMaintenanceApproaching: !alertForm.get('alertOnMaintenanceApproaching')?.value})"
+                [class.bg-secondary]="alertForm.get('alertOnMaintenanceApproaching')?.value"
+                [class.bg-surface-variant]="!alertForm.get('alertOnMaintenanceApproaching')?.value"
+                class="w-10 h-5 rounded-full relative transition-colors duration-200 outline-none">
+                <span 
+                  [class.translate-x-5]="alertForm.get('alertOnMaintenanceApproaching')?.value"
+                  [class.translate-x-0.5]="!alertForm.get('alertOnMaintenanceApproaching')?.value"
+                  class="absolute left-0 top-0.5 w-4 h-4 bg-white rounded-full transition-transform duration-200 shadow-sm block"></span>
+              </button>
+            </div>
+            <p class="text-[11px] text-on-surface-variant">Alerts operators when vehicle odometer approaches scheduled service interval.</p>
+            
+            <div class="pt-3 space-y-2" [class.opacity-50]="!alertForm.get('alertOnMaintenanceApproaching')?.value">
+              <label class="block text-[11px] font-bold text-on-surface-variant uppercase tracking-wider">Warning Buffer (km)</label>
+              <div class="flex items-center gap-4">
+                <input type="number" formControlName="maintenanceOdometerThreshold"
+                  [attr.disabled]="!alertForm.get('alertOnMaintenanceApproaching')?.value ? true : null"
+                  class="w-full h-10 px-3 bg-surface-container-lowest border border-outline-variant rounded-lg text-body-md focus:ring-2 focus:ring-secondary-container outline-none font-semibold text-primary"/>
+                <span class="text-body-sm font-bold text-on-surface-variant font-mono">KM</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Route Delay Toggles -->
+          <div class="space-y-3 p-4 bg-surface-container-low rounded-xl border border-outline-variant/30">
+            <div class="flex items-center justify-between">
+              <label class="text-body-md font-bold text-primary">Route Delay Alerts</label>
+              <button type="button" 
+                (click)="alertForm.patchValue({alertOnRouteDelay: !alertForm.get('alertOnRouteDelay')?.value})"
+                [class.bg-secondary]="alertForm.get('alertOnRouteDelay')?.value"
+                [class.bg-surface-variant]="!alertForm.get('alertOnRouteDelay')?.value"
+                class="w-10 h-5 rounded-full relative transition-colors duration-200 outline-none">
+                <span 
+                  [class.translate-x-5]="alertForm.get('alertOnRouteDelay')?.value"
+                  [class.translate-x-0.5]="!alertForm.get('alertOnRouteDelay')?.value"
+                  class="absolute left-0 top-0.5 w-4 h-4 bg-white rounded-full transition-transform duration-200 shadow-sm block"></span>
+              </button>
+            </div>
+            <p class="text-[11px] text-on-surface-variant">Notifies when vehicle trips exceed scheduled ETA thresholds.</p>
+            
+            <div class="pt-3 space-y-2" [class.opacity-50]="!alertForm.get('alertOnRouteDelay')?.value">
+              <label class="block text-[11px] font-bold text-on-surface-variant uppercase tracking-wider">Delay Threshold (Minutes)</label>
+              <div class="flex items-center gap-4">
+                <input type="number" formControlName="routeDelayThresholdMinutes"
+                  [attr.disabled]="!alertForm.get('alertOnRouteDelay')?.value ? true : null"
+                  class="w-full h-10 px-3 bg-surface-container-lowest border border-outline-variant rounded-lg text-body-md focus:ring-2 focus:ring-secondary-container outline-none font-semibold text-primary"/>
+                <span class="text-body-sm font-bold text-on-surface-variant font-mono">MIN</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Extra Boolean Channels -->
+          <div class="space-y-4 p-4 bg-surface-container-low rounded-xl border border-outline-variant/30 flex flex-col justify-between">
+            <div class="flex items-center justify-between">
+              <div>
+                <label class="text-body-md font-bold text-primary">Vehicle Availability Alert</label>
+                <p class="text-[11px] text-on-surface-variant">Alert when a vehicle changes active/inactive state.</p>
+              </div>
+              <button type="button" 
+                (click)="alertForm.patchValue({alertOnVehicleAvailability: !alertForm.get('alertOnVehicleAvailability')?.value})"
+                [class.bg-secondary]="alertForm.get('alertOnVehicleAvailability')?.value"
+                [class.bg-surface-variant]="!alertForm.get('alertOnVehicleAvailability')?.value"
+                class="w-10 h-5 rounded-full relative transition-colors duration-200 outline-none flex-shrink-0">
+                <span 
+                  [class.translate-x-5]="alertForm.get('alertOnVehicleAvailability')?.value"
+                  [class.translate-x-0.5]="!alertForm.get('alertOnVehicleAvailability')?.value"
+                  class="absolute left-0 top-0.5 w-4 h-4 bg-white rounded-full transition-transform duration-200 shadow-sm block"></span>
+              </button>
+            </div>
+
+            <div class="flex items-center justify-between border-t border-outline-variant/20 pt-3">
+              <div>
+                <label class="text-body-md font-bold text-primary">Email Notifications</label>
+                <p class="text-[11px] text-on-surface-variant">Receive automated weekly efficiency summary.</p>
+              </div>
+              <button type="button" 
+                (click)="alertForm.patchValue({receiveEmail: !alertForm.get('receiveEmail')?.value})"
+                [class.bg-secondary]="alertForm.get('receiveEmail')?.value"
+                [class.bg-surface-variant]="!alertForm.get('receiveEmail')?.value"
+                class="w-10 h-5 rounded-full relative transition-colors duration-200 outline-none flex-shrink-0">
+                <span 
+                  [class.translate-x-5]="alertForm.get('receiveEmail')?.value"
+                  [class.translate-x-0.5]="!alertForm.get('receiveEmail')?.value"
+                  class="absolute left-0 top-0.5 w-4 h-4 bg-white rounded-full transition-transform duration-200 shadow-sm block"></span>
+              </button>
+            </div>
+            
+            <div class="flex items-center justify-between border-t border-outline-variant/20 pt-3">
+              <div>
+                <label class="text-body-md font-bold text-primary">SignalR Realtime Sync</label>
+                <p class="text-[11px] text-on-surface-variant">Enables hot-reloads of dashboard grids via web sockets.</p>
+              </div>
+              <button type="button" 
+                (click)="alertForm.patchValue({receiveSignalR: !alertForm.get('receiveSignalR')?.value})"
+                [class.bg-secondary]="alertForm.get('receiveSignalR')?.value"
+                [class.bg-surface-variant]="!alertForm.get('receiveSignalR')?.value"
+                class="w-10 h-5 rounded-full relative transition-colors duration-200 outline-none flex-shrink-0">
+                <span 
+                  [class.translate-x-5]="alertForm.get('receiveSignalR')?.value"
+                  [class.translate-x-0.5]="!alertForm.get('receiveSignalR')?.value"
+                  class="absolute left-0 top-0.5 w-4 h-4 bg-white rounded-full transition-transform duration-200 shadow-sm block"></span>
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Form Submission Button -->
+        <div class="flex justify-end pt-2">
+          <button type="submit" [disabled]="alertForm.invalid"
+            class="h-10 px-6 bg-secondary hover:brightness-110 disabled:opacity-50 text-on-secondary font-label-caps text-label-caps rounded transition-all active:scale-95 flex items-center gap-2">
+            <span class="material-symbols-outlined text-[18px]">save</span>
+            Save Alert Preferences
+          </button>
+        </div>
+      </form>
+    </section>
+    }
+
+    <!-- User Management / Approvals Section (Admin only) -->
+    @if (authService.userRole() === 'Admin') {
+    <section class="lg:col-span-12 bg-surface-container-lowest border border-outline-variant rounded-xl shadow-sm overflow-hidden">
+      <div class="p-6 border-b border-outline-variant/20 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div class="flex items-center gap-3">
+          <span class="material-symbols-outlined text-secondary" data-icon="group">group</span>
+          <div>
+            <h3 class="text-title-sm font-title-sm text-primary">Pending User Approvals</h3>
+            <p class="text-body-sm text-on-surface-variant">Approve or audit newly registered fleet managers and drivers</p>
+          </div>
+        </div>
+      </div>
+
+      @if (approvalSuccessMessage()) {
+      <div class="m-6 p-3 bg-secondary-container text-on-secondary-container rounded-lg text-body-sm font-semibold flex items-center gap-2">
+        <span class="material-symbols-outlined text-[18px]" data-icon="check_circle">check_circle</span>
+        <span>{{ approvalSuccessMessage() }}</span>
+      </div>
+      }
+      @if (approvalsError()) {
+      <div class="m-6 p-3 bg-error-container text-on-error-container rounded-lg text-body-sm font-semibold flex items-center gap-2">
+        <span class="material-symbols-outlined text-[18px]" data-icon="error">error</span>
+        <span>{{ approvalsError() }}</span>
+      </div>
+      }
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="bg-surface-container text-label-caps text-on-surface-variant">
+              <th class="p-4 border-b border-outline-variant">Name &amp; Role</th>
+              <th class="p-4 border-b border-outline-variant">Email Address</th>
+              <th class="p-4 border-b border-outline-variant">Details / License No.</th>
+              <th class="p-4 border-b border-outline-variant">Requested At</th>
+              <th class="p-4 border-b border-outline-variant text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="text-body-md divide-y divide-outline-variant/30 text-primary">
+            @if (approvalsLoading()) {
+            <tr>
+              <td colspan="5" class="p-8 text-center text-on-surface-variant">
+                <div class="w-8 h-8 rounded-full border-4 border-outline-variant border-t-secondary animate-spin mx-auto mb-2"></div>
+                Loading pending requests...
+              </td>
+            </tr>
+            } @else if (pendingApprovals().length === 0) {
+            <tr>
+              <td colspan="5" class="p-8 text-center text-on-surface-variant font-medium">
+                No users currently awaiting approval.
+              </td>
+            </tr>
+            } @else {
+            @for (user of pendingApprovals(); track user.userId) {
+            <tr class="hover:bg-surface-container-low transition-colors">
+              <td class="p-4 flex items-center gap-3">
+                <div class="w-8 h-8 rounded-full bg-secondary-fixed text-on-secondary-fixed-variant flex items-center justify-center font-bold text-[12px]">
+                  {{ getUserInitial(user.firstName, user.lastName) }}
+                </div>
+                <div>
+                  <p class="font-bold">{{ user.firstName }} {{ user.lastName }}</p>
+                  <p class="text-[11px] text-on-surface-variant font-bold uppercase tracking-wider">
+                    {{ user.role === 'FleetManager' ? 'Fleet Manager' : user.role }}
+                  </p>
+                </div>
+              </td>
+              <td class="p-4">{{ user.email }}</td>
+              <td class="p-4 text-body-sm text-on-surface-variant">
+                @if (user.role === 'Driver') {
+                  <span class="font-semibold text-primary">DL:</span> {{ user.licenseNumber || 'N/A' }}
+                } @else {
+                  <span class="font-semibold text-primary">Location:</span> {{ user.location || 'N/A' }}
+                }
+              </td>
+              <td class="p-4 text-tabular-nums text-on-surface-variant">
+                {{ user.createdAt | date:'medium' }}
+              </td>
+              <td class="p-4 text-right">
+                <button (click)="onApproveUser(user.userId)"
+                  class="h-8 px-3 bg-secondary text-on-secondary font-bold text-[11px] uppercase tracking-wider rounded hover:brightness-110 active:scale-95 transition-all">
+                  Approve
+                </button>
+              </td>
+            </tr>
+            }
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+    }
+
+    <!-- Fleet Manager Profile Details Section -->
+    @if (authService.userRole() === 'FleetManager') {
+    <section class="lg:col-span-12 bg-surface-container-lowest border border-outline-variant rounded-xl shadow-sm p-6 space-y-6">
+      <div class="flex items-center gap-3 border-b border-outline-variant/20 pb-4">
+        <span class="material-symbols-outlined text-secondary">badge</span>
+        <div>
+          <h3 class="text-title-sm font-title-sm text-primary">Fleet Manager Profile</h3>
+          <p class="text-body-sm text-on-surface-variant">Your account configuration and assigned route location</p>
+        </div>
+      </div>
+
+      @if (fmProfileLoading()) {
+        <div class="py-6 text-center text-on-surface-variant">
+          <div class="w-8 h-8 rounded-full border-4 border-outline-variant border-t-secondary animate-spin mx-auto mb-2"></div>
+          Loading profile...
+        </div>
+      } @else if (fmProfileError()) {
+        <div class="p-3 bg-error-container text-on-error-container rounded-lg text-body-sm font-semibold flex items-center gap-2">
+          <span class="material-symbols-outlined text-[18px]">error</span>
+          <span>{{ fmProfileError() }}</span>
+        </div>
+      } @else if (fmProfile()) {
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-body-md text-primary">
+          <div class="space-y-1">
+            <span class="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider">First Name</span>
+            <p class="font-semibold text-title-sm bg-surface-container-low px-3 py-2 rounded-lg border border-outline-variant/30">{{ fmProfile()?.firstName }}</p>
+          </div>
+          <div class="space-y-1">
+            <span class="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider">Last Name</span>
+            <p class="font-semibold text-title-sm bg-surface-container-low px-3 py-2 rounded-lg border border-outline-variant/30">{{ fmProfile()?.lastName }}</p>
+          </div>
+          <div class="space-y-1">
+            <span class="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider">Email Address</span>
+            <p class="font-semibold text-title-sm bg-surface-container-low px-3 py-2 rounded-lg border border-outline-variant/30">{{ fmProfile()?.email }}</p>
+          </div>
+          <div class="space-y-1">
+            <span class="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider">Assigned Location</span>
+            <p class="font-semibold text-title-sm bg-surface-container-low px-3 py-2 rounded-lg border border-outline-variant/30 text-secondary">{{ fmProfile()?.routeLocationName || 'Global / Unassigned' }}</p>
+          </div>
+        </div>
+      }
+    </section>
+    }
+
+    <!-- Driver Profile Details Section -->
+    @if (authService.userRole() === 'Driver') {
+    <section class="lg:col-span-12 bg-surface-container-lowest border border-outline-variant rounded-xl shadow-sm p-6 space-y-6">
+      <div class="flex items-center gap-3 border-b border-outline-variant/20 pb-4">
+        <span class="material-symbols-outlined text-secondary">badge</span>
+        <div>
+          <h3 class="text-title-sm font-title-sm text-primary">Driver Profile</h3>
+          <p class="text-body-sm text-on-surface-variant">Your driving credentials and profile metrics</p>
+        </div>
+      </div>
+
+      @if (driverProfileLoading()) {
+        <div class="py-6 text-center text-on-surface-variant">
+          <div class="w-8 h-8 rounded-full border-4 border-outline-variant border-t-secondary animate-spin mx-auto mb-2"></div>
+          Loading profile...
+        </div>
+      } @else if (driverProfileError()) {
+        <div class="p-3 bg-error-container text-on-error-container rounded-lg text-body-sm font-semibold flex items-center gap-2">
+          <span class="material-symbols-outlined text-[18px]">error</span>
+          <span>{{ driverProfileError() }}</span>
+        </div>
+      } @else if (driverProfile()) {
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-body-md text-primary">
+          <div class="space-y-1">
+            <span class="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider">First Name</span>
+            <p class="font-semibold text-title-sm bg-surface-container-low px-3 py-2 rounded-lg border border-outline-variant/30">{{ driverProfile()?.firstName }}</p>
+          </div>
+          <div class="space-y-1">
+            <span class="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider">Last Name</span>
+            <p class="font-semibold text-title-sm bg-surface-container-low px-3 py-2 rounded-lg border border-outline-variant/30">{{ driverProfile()?.lastName }}</p>
+          </div>
+          <div class="space-y-1">
+            <span class="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider">Email Address</span>
+            <p class="font-semibold text-title-sm bg-surface-container-low px-3 py-2 rounded-lg border border-outline-variant/30">{{ driverProfile()?.email }}</p>
+          </div>
+          <div class="space-y-1">
+            <span class="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider">License Number</span>
+            <p class="font-semibold text-title-sm bg-surface-container-low px-3 py-2 rounded-lg border border-outline-variant/30 tracking-widest">{{ driverProfile()?.licenseNumber }}</p>
+          </div>
+          <div class="space-y-1">
+            <span class="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider">Current Driver Score</span>
+            <p class="font-semibold text-title-sm bg-surface-container-low px-3 py-2 rounded-lg border border-outline-variant/30 text-secondary">{{ driverProfile()?.currentDriverScore }}</p>
+          </div>
+          <div class="space-y-1">
+            <span class="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider">Current Location</span>
+            <p class="font-semibold text-title-sm bg-surface-container-low px-3 py-2 rounded-lg border border-outline-variant/30 text-secondary">{{ driverProfile()?.currentLocationName }}</p>
+          </div>
+        </div>
+      }
+    </section>
+    }
+  </div>
+  }
+</main>

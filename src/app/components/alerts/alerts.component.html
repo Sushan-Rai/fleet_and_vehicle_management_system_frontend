@@ -1,0 +1,116 @@
+<app-navbar></app-navbar>
+
+<main class="ml-0 md:ml-60 min-h-screen bg-background text-on-background">
+  <div class="p-container-padding space-y-stack-gap">
+    
+    <!-- Page Header -->
+    <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+      <div>
+        <h2 class="font-display-lg text-display-lg text-primary tracking-tight">Operations Alerts</h2>
+        <p class="font-body-md text-body-md text-on-surface-variant">Real-time status reports, vehicle anomalies, and dispatch notifications.</p>
+      </div>
+      @if (alertsService.unreadCount() > 0) {
+        <button (click)="markAllAsRead()" class="px-4 py-2 bg-secondary text-white font-bold rounded-lg hover:opacity-90 active:scale-95 duration-75 text-body-sm flex items-center gap-2">
+          <span class="material-symbols-outlined text-[18px]">done_all</span>
+          Mark All as Read
+        </button>
+      }
+    </div>
+
+    <!-- Alert Filters Bar -->
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-4 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <!-- Read Status Filters -->
+      <div class="flex gap-2">
+        <button (click)="setReadStatusFilter('All')" [class.bg-secondary-container]="selectedReadStatus() === 'All'" [class.text-on-secondary-container]="selectedReadStatus() === 'All'" [class.font-bold]="selectedReadStatus() === 'All'" class="px-4 py-1.5 rounded-lg text-body-sm text-on-surface-variant hover:bg-surface-container transition-all">
+          All Alerts ({{ alertsService.alerts().length }})
+        </button>
+        <button (click)="setReadStatusFilter('Unread')" [class.bg-secondary-container]="selectedReadStatus() === 'Unread'" [class.text-on-secondary-container]="selectedReadStatus() === 'Unread'" [class.font-bold]="selectedReadStatus() === 'Unread'" class="px-4 py-1.5 rounded-lg text-body-sm text-on-surface-variant hover:bg-surface-container transition-all relative">
+          Unread
+          @if (alertsService.unreadCount() > 0) {
+            <span class="ml-1 px-1.5 py-0.5 bg-error text-white text-[9px] font-bold rounded-full">
+              {{ alertsService.unreadCount() }}
+            </span>
+          }
+        </button>
+      </div>
+
+      <!-- Severity Filters -->
+      <div class="flex items-center gap-2 self-stretch sm:self-auto overflow-x-auto pb-2 sm:pb-0 scrollbar-none">
+        <span class="text-label-caps font-label-caps text-on-surface-variant uppercase shrink-0">Severity:</span>
+        <div class="flex gap-1">
+          <button (click)="setSeverityFilter('All')" [class.bg-primary]="selectedSeverity() === 'All'" [class.text-white]="selectedSeverity() === 'All'" class="px-3 py-1 text-label-caps font-label-caps border border-outline-variant rounded hover:bg-surface-container transition-all">
+            All
+          </button>
+          <button (click)="setSeverityFilter('High')" [class.bg-error]="selectedSeverity() === 'High'" [class.text-white]="selectedSeverity() === 'High'" [class.border-error]="selectedSeverity() === 'High'" class="px-3 py-1 text-label-caps font-label-caps border border-outline-variant rounded hover:bg-surface-container text-error transition-all">
+            High
+          </button>
+          <button (click)="setSeverityFilter('Medium')" [class.bg-amber-500]="selectedSeverity() === 'Medium'" [class.text-white]="selectedSeverity() === 'Medium'" [class.border-amber-500]="selectedSeverity() === 'Medium'" class="px-3 py-1 text-label-caps font-label-caps border border-outline-variant rounded hover:bg-surface-container text-amber-600 dark:text-amber-400 transition-all">
+            Medium
+          </button>
+          <button (click)="setSeverityFilter('Low')" [class.bg-secondary]="selectedSeverity() === 'Low'" [class.text-white]="selectedSeverity() === 'Low'" [class.border-secondary]="selectedSeverity() === 'Low'" class="px-3 py-1 text-label-caps font-label-caps border border-outline-variant rounded hover:bg-surface-container text-secondary transition-all">
+            Low
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Alerts List Canvas -->
+    <div class="space-y-3">
+      @if (filteredAlerts().length === 0) {
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-12 text-center shadow-sm">
+          <div class="w-16 h-16 bg-surface-container-low text-on-surface-variant rounded-full flex items-center justify-center mx-auto mb-4 border border-outline-variant">
+            <span class="material-symbols-outlined text-[32px] opacity-60">notifications_none</span>
+          </div>
+          <h3 class="font-title-sm text-title-sm text-primary mb-1">No alerts found</h3>
+          <p class="text-body-md text-on-surface-variant">
+            There are no alerts matching the selected filters.
+          </p>
+        </div>
+      } @else {
+        @for (alert of filteredAlerts(); track alert.id) {
+          <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-5 shadow-sm border-l-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 transition-all relative overflow-hidden group hover:shadow-md"
+               [ngClass]="getSeverityClass(alert.severity)">
+            
+            <div class="flex items-start gap-4">
+              <!-- Severity Icon -->
+              <div class="p-2 rounded-lg bg-surface-lowest border border-outline-variant flex items-center justify-center shrink-0">
+                <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">
+                  {{ getSeverityIcon(alert.severity) }}
+                </span>
+              </div>
+              
+              <div>
+                <div class="flex items-center gap-2 flex-wrap">
+                  <h4 class="font-bold text-primary text-body-md">{{ alert.title }}</h4>
+                  @if (!alert.isRead) {
+                    <span class="px-2 py-0.5 bg-secondary text-white text-[9px] font-bold rounded uppercase tracking-wider animate-pulse">
+                      Unread
+                    </span>
+                  }
+                  @if (alert.vehicleRegNo) {
+                    <span class="px-2 py-0.5 bg-surface-container text-on-surface-variant text-[10px] font-bold rounded uppercase">
+                      Vehicle: {{ alert.vehicleRegNo }}
+                    </span>
+                  }
+                </div>
+                <p class="text-body-md text-on-surface-variant mt-1 leading-relaxed max-w-2xl">{{ alert.message }}</p>
+                <div class="flex items-center gap-3 text-[11px] text-outline mt-2">
+                  <span>Type: {{ alert.alertType }}</span>
+                  <span>•</span>
+                  <span>{{ alert.createdAt | date:'medium' }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Read Action Button -->
+            @if (!alert.isRead) {
+              <button (click)="markAsRead(alert.id)" class="px-4 py-1.5 border border-outline-variant bg-surface-lowest text-primary text-body-sm font-bold rounded-lg hover:bg-secondary hover:text-white hover:border-secondary transition-all shrink-0 self-end md:self-auto shadow-sm">
+                Mark as Read
+              </button>
+            }
+          </div>
+        }
+      }
+    </div>
+  </div>
+</main>

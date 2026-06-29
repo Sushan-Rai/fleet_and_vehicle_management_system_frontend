@@ -1,0 +1,13 @@
+/* Custom CSS for range inputs and toggle transitions */
+input[type="range"] {
+  outline: none;
+}
+
+input[type="range"]::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 4px;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  margin-top: -5px;
+}

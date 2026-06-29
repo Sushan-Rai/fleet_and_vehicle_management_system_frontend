@@ -1,0 +1,801 @@
+<app-navbar></app-navbar>
+
+<!-- Top bar for Mobile Only -->
+<header
+  class="md:hidden bg-surface-lowest dark:bg-primary-container border-b border-outline-variant fixed top-0 left-0 right-0 h-14 px-4 flex justify-between items-center z-40">
+  <div class="flex items-center gap-3">
+    <div class="w-8 h-8 rounded-full bg-secondary-fixed flex items-center justify-center overflow-hidden">
+      <img alt="Manager Avatar" class="w-full h-full object-cover"
+        src="https://lh3.googleusercontent.com/aida-public/AB6AXuBmSOychuiFYYeExBS1_zDqv_of0-oCoK6-zoKaaTT2GApuD_BUmWCReLUbXFDyR3DzrjPM6yxNXkw0510B7weCNc3JXHgD6cQOIf75UC-clHn9S_B4AAZq9VDL0D52dYAWGwsZN7Vl1dvCT8fO1TNTmvZ_oyV2EJ50A6f8blFTgYioycwSOpB_0RDD0Lun4m9mNGVvN_hhFRMwqU1pSFsnfItaEJvwL04uTId-rNB2_Y43u8k7elqaKwSbP8QGecDnE__1UGYn0xC6" />
+    </div>
+    <span class="font-bold text-primary dark:text-inverse-primary text-[18px]">FleetControl Pro</span>
+  </div>
+  <button class="p-2 text-on-surface-variant hover:text-secondary transition-colors relative">
+    <span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+    <span class="absolute top-2 right-2 w-2 h-2 bg-error rounded-full border-2 border-surface-lowest"></span>
+  </button>
+</header>
+
+<main class="ml-0 md:ml-60 pt-16 md:pt-6 p-4 md:p-6 pb-24 md:pb-6 space-y-6">
+  <!-- Page Title & Actions -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div>
+      <h2 class="font-display-lg text-display-lg text-primary">Vehicle Inventory</h2>
+      <p class="text-on-surface-variant font-body-md">Manage, track and monitor your entire fleet assets in real-time.
+      </p>
+    </div>
+    <div class="flex items-center gap-3 self-end sm:self-auto">
+      @if (isAdmin() || isFleetManager()) {
+        <button (click)="openAddModal()"
+          class="hidden md:flex h-9 px-4 bg-secondary text-on-secondary font-label-caps text-label-caps rounded items-center gap-2 hover:brightness-110 transition-all active:scale-95">
+          <span class="material-symbols-outlined text-[18px]" data-icon="add">add</span>
+          Add Vehicle
+        </button>
+        <button (click)="openAddModelModal()"
+          class="hidden md:flex h-9 px-4 bg-tertiary text-on-tertiary font-label-caps text-label-caps rounded items-center gap-2 hover:brightness-110 transition-all active:scale-95">
+          <span class="material-symbols-outlined text-[18px]" data-icon="add">add</span>
+          Add Vehicle Model
+        </button>
+      }
+      @if (isAdmin()) {
+        <button (click)="openAddCategoryModal()"
+          class="hidden md:flex h-9 px-4 bg-primary text-on-primary font-label-caps text-label-caps rounded items-center gap-2 hover:brightness-110 transition-all active:scale-95">
+          <span class="material-symbols-outlined text-[18px]" data-icon="add">add</span>
+          Add Category
+        </button>
+      }
+    </div>
+  </div>
+
+  <!-- Bento Stats Grid (Quick Glance) -->
+  <section class="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <div
+      class="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant/30 flex items-center gap-4 shadow-[0px_1px_3px_rgba(0,0,0,0.05)] hover:shadow-md transition-shadow">
+      <div class="w-12 h-12 rounded-lg bg-primary-fixed flex items-center justify-center text-primary">
+        <span class="material-symbols-outlined" data-icon="directions_car">directions_car</span>
+      </div>
+      <div>
+        <p class="text-on-surface-variant text-[11px] font-bold uppercase tracking-wider">Total Fleet</p>
+        <p class="text-headline-md font-headline-md leading-none mt-1">{{ kpiTotal() | number }}</p>
+      </div>
+    </div>
+    <div
+      class="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant/30 flex items-center gap-4 shadow-[0px_1px_3px_rgba(0,0,0,0.05)] hover:shadow-md transition-shadow">
+      <div class="w-12 h-12 rounded-lg bg-secondary-fixed text-secondary flex items-center justify-center">
+        <span class="material-symbols-outlined" data-icon="check_circle">check_circle</span>
+      </div>
+      <div>
+        <p class="text-on-surface-variant text-[11px] font-bold uppercase tracking-wider">Available</p>
+        <p class="text-headline-md font-headline-md leading-none mt-1 text-secondary">{{ kpiAvailable() | number }}</p>
+      </div>
+    </div>
+    <div
+      class="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant/30 flex items-center gap-4 shadow-[0px_1px_3px_rgba(0,0,0,0.05)] hover:shadow-md transition-shadow">
+      <div class="w-12 h-12 rounded-lg bg-tertiary-fixed text-tertiary flex items-center justify-center">
+        <span class="material-symbols-outlined" data-icon="assignment_ind">assignment_ind</span>
+      </div>
+      <div>
+        <p class="text-on-surface-variant text-[11px] font-bold uppercase tracking-wider">Assigned</p>
+        <p class="text-headline-md font-headline-md leading-none mt-1">{{ kpiAssigned() | number }}</p>
+      </div>
+    </div>
+    <div
+      class="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant/30 flex items-center gap-4 shadow-[0px_1px_3px_rgba(0,0,0,0.05)] hover:shadow-md transition-shadow">
+      <div class="w-12 h-12 rounded-lg bg-error-container text-error flex items-center justify-center">
+        <span class="material-symbols-outlined" data-icon="engineering">engineering</span>
+      </div>
+      <div>
+        <p class="text-on-surface-variant text-[11px] font-bold uppercase tracking-wider">In Service</p>
+        <p class="text-headline-md font-headline-md leading-none mt-1 text-error">{{ kpiInService() | number }}</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Filter & Search Bar - Desktop View -->
+  <section
+    class="hidden md:flex bg-surface-container-lowest p-4 rounded-xl border border-outline-variant/30 shadow-sm items-center gap-4">
+    <div class="flex items-center gap-2 border-r border-outline-variant/30 pr-4 mr-2">
+      <span class="material-symbols-outlined text-on-surface-variant" data-icon="filter_list">filter_list</span>
+      <span class="font-label-caps text-label-caps text-on-surface-variant">Filters</span>
+    </div>
+    <div class="flex-1 min-w-[150px]">
+      <select [value]="selectedCategory()" (change)="selectedCategory.set($any($event.target).value)"
+        class="w-full h-9 bg-surface-container-low border border-outline-variant/30 rounded px-3 font-body-md text-body-md focus:ring-2 focus:ring-secondary-container outline-none">
+        <option value="">All Categories</option>
+        @for (cat of categories(); track cat) {
+        <option [value]="cat">{{ cat }}</option>
+        }
+      </select>
+    </div>
+    <div class="flex-1 min-w-[150px]">
+      <select [value]="selectedStatus()" (change)="selectedStatus.set($any($event.target).value)"
+        class="w-full h-9 bg-surface-container-low border border-outline-variant/30 rounded px-3 font-body-md text-body-md focus:ring-2 focus:ring-secondary-container outline-none">
+        <option value="">All Statuses</option>
+        <option value="Active">Available</option>
+        <option value="InTransit">Assigned</option>
+        <option value="Maintenance">Maintenance</option>
+      </select>
+    </div>
+    <div class="flex-[2] min-w-[240px] relative">
+      <span
+        class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px]"
+        data-icon="search">search</span>
+      <input [value]="searchTerm()" (input)="searchTerm.set($any($event.target).value)"
+        class="w-full h-9 pl-10 pr-4 bg-surface-container-low border border-outline-variant/30 rounded font-body-md text-body-md focus:ring-2 focus:ring-secondary-container outline-none"
+        placeholder="Filter by Registration" type="text" />
+    </div>
+    <button (click)="searchTerm.set(''); selectedStatus.set(''); selectedCategory.set('');"
+      class="h-9 px-4 text-on-surface-variant hover:text-primary hover:bg-surface-variant transition-colors font-label-caps text-label-caps rounded">
+      Clear All
+    </button>
+  </section>
+
+  <!-- Search and Chips Filter Section - Mobile View -->
+  <section class="md:hidden space-y-3">
+    <div class="relative">
+      <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant"
+        data-icon="search">search</span>
+      <input [value]="searchTerm()" (input)="searchTerm.set($any($event.target).value)"
+        class="w-full h-11 pl-10 pr-4 bg-surface-container-lowest border border-outline-variant/30 rounded-xl focus:ring-2 focus:ring-secondary outline-none text-body-md"
+        placeholder="Filter by Registration" type="text" />
+    </div>
+    <div class="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+      <button (click)="selectStatusFilter('')" [class.bg-secondary-container]="selectedStatus() === ''"
+        [class.text-on-secondary-container]="selectedStatus() === ''"
+        [class.bg-surface-container]="selectedStatus() !== ''"
+        class="px-4 py-1.5 rounded-full font-label-caps text-label-caps flex-shrink-0 border border-transparent">ALL
+        VEHICLES</button>
+      <button (click)="selectStatusFilter('Active')"
+        [class.bg-secondary-container]="selectedStatus() === 'Active'"
+        [class.text-on-secondary-container]="selectedStatus() === 'Active'"
+        [class.bg-surface-container]="selectedStatus() !== 'Active'"
+        class="px-4 py-1.5 rounded-full font-label-caps text-label-caps flex-shrink-0 border border-outline-variant/30">AVAILABLE</button>
+      <button (click)="selectStatusFilter('InTransit')" [class.bg-secondary-container]="selectedStatus() === 'InTransit'"
+        [class.text-on-secondary-container]="selectedStatus() === 'InTransit'"
+        [class.bg-surface-container]="selectedStatus() !== 'InTransit'"
+        class="px-4 py-1.5 rounded-full font-label-caps text-label-caps flex-shrink-0 border border-outline-variant/30">ASSIGNED</button>
+      <button (click)="selectStatusFilter('Maintenance')"
+        [class.bg-secondary-container]="selectedStatus() === 'Maintenance'"
+        [class.text-on-secondary-container]="selectedStatus() === 'Maintenance'"
+        [class.bg-surface-container]="selectedStatus() !== 'Maintenance'"
+        class="px-4 py-1.5 rounded-full font-label-caps text-label-caps flex-shrink-0 border border-outline-variant/30">MAINTENANCE</button>
+    </div>
+  </section>
+
+  <!-- Loader overlay -->
+  @if (loading()) {
+  <div class="flex flex-col items-center justify-center py-12 text-center transition-all duration-300">
+    <div class="w-12 h-12 rounded-full border-4 border-outline-variant border-t-secondary animate-spin"></div>
+    <p class="text-on-surface-variant font-body-sm mt-3">Loading vehicles inventory...</p>
+  </div>
+  } @else {
+  <!-- Main Inventory Feed - Responsive -->
+  <div class="space-y-4">
+    <!-- Desktop Table view -->
+    <div
+      class="hidden md:flex flex-col bg-surface-container-lowest border border-outline-variant/30 rounded-xl shadow-sm overflow-hidden">
+      <div class="overflow-x-auto flex-1">
+        <table class="w-full border-collapse">
+          <thead
+            class="sticky top-0 bg-surface-container-highest/80 backdrop-blur-md z-10 border-b border-outline-variant/30">
+            <tr class="text-left">
+              <th class="p-4 font-label-caps text-label-caps text-on-surface-variant">Reg No</th>
+              <th class="p-4 font-label-caps text-label-caps text-on-surface-variant">Category</th>
+              <th class="p-4 font-label-caps text-label-caps text-on-surface-variant">Model</th>
+              <th class="p-4 font-label-caps text-label-caps text-on-surface-variant">Current Status</th>
+              <th class="p-4 font-label-caps text-label-caps text-on-surface-variant">Last Odometer</th>
+              @if (isAdmin() || isDriver()) {
+              <th class="p-4 font-label-caps text-label-caps text-on-surface-variant text-right">Actions</th>
+              }
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-outline-variant/20">
+            @if (filteredVehicles().length === 0) {
+            <tr>
+              <td colspan="6" class="p-8 text-center text-on-surface-variant font-body-md">No vehicles match the
+                filters.</td>
+            </tr>
+            } @else {
+            @for (item of paginatedVehicles(); track item.id) {
+            <tr [class.bg-secondary-fixed/10]="selectedRowId() === item.id" (click)="selectRow(item.id)"
+              class="hover:bg-surface-container-low transition-all cursor-pointer duration-150">
+              <td class="p-4 font-tabular-nums text-tabular-nums text-primary font-bold">{{ item.regNo }}</td>
+              <td class="p-4 font-body-md text-body-md">{{ item.categoryName }}</td>
+              <td class="p-4 font-body-md text-body-md text-on-surface-variant">{{ item.modelName }}</td>
+              <td class="p-4">
+                @if (item.status === 'Active') {
+                <span
+                  class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-secondary-fixed text-on-secondary-fixed-variant uppercase inline-flex items-center gap-1">
+                  <span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                  Available
+                </span>
+                } @else if (item.status === 'InTransit') {
+                <span
+                  class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-tertiary-fixed text-on-tertiary-fixed-variant uppercase inline-flex items-center gap-1">
+                  <span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span>
+                  Assigned
+                </span>
+                } @else if (item.status === 'Maintenance'){
+                <span
+                  class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-error-container text-on-error-container uppercase inline-flex items-center gap-1">
+                  <span class="w-1.5 h-1.5 rounded-full bg-error animate-pulse"></span>
+                  Maintenance
+                </span>
+                } @else {
+                <span
+                  class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-outline-variant text-on-surface-variant uppercase inline-flex items-center gap-1">
+                  <span class="w-1.5 h-1.5 rounded-full bg-on-surface-variant"></span>
+                  Not Available
+                </span>
+                }
+              </td>
+              <td class="p-4 font-tabular-nums text-tabular-nums">{{ item.currentOdometerReading | number }} km</td>
+              @if (isAdmin()) {
+              <td class="p-4 text-right">
+                <div class="relative inline-block text-left">
+                  <button (click)="toggleDropdown(item.id, $event)" class="p-1.5 hover:bg-secondary-fixed rounded-full text-on-surface-variant">
+                    <span class="material-symbols-outlined text-[20px]" data-icon="more_vert">more_vert</span>
+                  </button>
+                  @if (activeDropdownVehicleId() === item.id) {
+                    <div class="absolute right-0 mt-2 w-32 bg-surface-container-lowest border border-outline-variant/30 rounded-lg shadow-lg z-50 py-1">
+                      <button (click)="onDeleteVehicle(item.id); $event.stopPropagation()" class="w-full text-left px-4 py-2 text-error hover:bg-surface-variant flex items-center gap-2">
+                        <span class="material-symbols-outlined text-[18px]">delete</span>
+                        Delete
+                      </button>
+                    </div>
+                  }
+                </div>
+              </td>
+              } @else if (isDriver()) {
+              <td class="p-4 text-right">
+                <div class="flex justify-end gap-2" (click)="$event.stopPropagation()">
+                  <a [routerLink]="['/fuel-logs']" [queryParams]="{ vehicleId: item.id, open: 'true' }"
+                    class="h-8 px-3 bg-secondary text-on-secondary hover:brightness-110 text-xs font-bold rounded flex items-center gap-1 transition-all active:scale-95 select-none">
+                    <span class="material-symbols-outlined text-xs" data-icon="local_gas_station">local_gas_station</span> Log Fuel
+                  </a>
+                  <a [routerLink]="['/damage']" [queryParams]="{ vehicleId: item.id }"
+                    class="h-8 px-3 bg-error text-on-error hover:brightness-110 text-xs font-bold rounded flex items-center gap-1 transition-all active:scale-95 select-none">
+                    <span class="material-symbols-outlined text-xs" data-icon="report_problem">report_problem</span> Damage
+                  </a>
+                </div>
+              </td>
+              }
+            </tr>
+            }
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination Footer -->
+      <div
+        class="h-14 bg-surface-container-low px-6 flex items-center justify-between border-t border-outline-variant/30">
+        <p class="font-body-md text-body-md text-on-surface-variant">Showing <span class="font-bold text-primary">{{ filteredVehicles().length ? (currentPage() - 1) * pageSize() + 1 : 0 }} - {{
+            Math.min(currentPage() * pageSize(), filteredVehicles().length) }}</span> of <span class="font-bold text-primary">{{ filteredVehicles().length
+            }}</span> vehicles</p>
+        <div class="flex items-center gap-1">
+          <button (click)="changePage(currentPage() - 1)" [disabled]="currentPage() === 1"
+            class="w-8 h-8 flex items-center justify-center rounded border border-outline-variant/30 text-on-surface-variant disabled:opacity-50 disabled:cursor-not-allowed hover:bg-surface-variant transition-colors">
+            <span class="material-symbols-outlined text-[20px]" data-icon="chevron_left">chevron_left</span>
+          </button>
+          
+          @for (page of pageNumbers(); track page) {
+            <button (click)="changePage(page)"
+              [class.bg-secondary]="currentPage() === page" [class.text-on-secondary]="currentPage() === page"
+              [class.border-outline-variant]="currentPage() !== page" [class.border]="currentPage() !== page" [class.text-on-surface-variant]="currentPage() !== page"
+              class="w-8 h-8 flex items-center justify-center rounded font-bold text-body-sm hover:bg-surface-variant transition-colors">
+              {{ page }}
+            </button>
+          }
+
+          <button (click)="changePage(currentPage() + 1)" [disabled]="currentPage() === totalPages() || totalPages() === 0"
+            class="w-8 h-8 flex items-center justify-center rounded border border-outline-variant/30 text-on-surface-variant disabled:opacity-50 disabled:cursor-not-allowed hover:bg-surface-variant transition-colors">
+            <span class="material-symbols-outlined text-[20px]" data-icon="chevron_right">chevron_right</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mobile List view -->
+    <div class="md:hidden space-y-3 pb-8">
+      @if (filteredVehicles().length === 0) {
+      <div
+        class="bg-surface-container-lowest p-8 border border-outline-variant/30 rounded-xl text-center text-on-surface-variant font-body-md">
+        No vehicles match selected status chip.
+      </div>
+      } @else {
+      @for (item of paginatedVehicles(); track item.id) {
+      <div (click)="selectRow(item.id)"
+        class="bg-surface-container-lowest border border-outline-variant/30 rounded-xl p-4 shadow-sm relative overflow-hidden active:scale-[0.99] transition-transform duration-100 cursor-pointer">
+        <div class="flex justify-between items-start mb-3">
+          <div>
+            <h2 class="font-title-sm text-title-sm text-primary tracking-tight font-bold">{{ item.regNo }}</h2>
+            <p class="text-on-surface-variant text-body-sm">{{ item.modelName }}</p>
+          </div>
+          <div class="flex flex-col items-end">
+            @if (item.status === 'Active') {
+            <span
+              class="bg-green-100 text-green-800 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider mb-1">Available</span>
+            <span class="w-2 h-2 rounded-full bg-green-500 status-dot-pulse"></span>
+            } @else if (item.status === 'InTransit') {
+            <span
+              class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider mb-1">Assigned</span>
+            <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+            } @else if (item.status === 'Maintenance') {
+            <span
+              class="bg-red-100 text-red-800 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider mb-1">Maintenance</span>
+            <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+            } @else {
+            <span
+              class="bg-gray-100 text-gray-800 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider mb-1">Not Available</span>
+            <span class="w-2 h-2 rounded-full bg-gray-500"></span>
+            }
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-4 border-t border-outline-variant/20 pt-3">
+          <div>
+            <p class="text-on-surface-variant font-label-caps text-label-caps">LAST ODOMETER</p>
+            <p class="font-tabular-nums text-primary font-semibold">{{ item.currentOdometerReading | number }} km</p>
+          </div>
+          <div class="text-right flex flex-col justify-between">
+            <div>
+              <p class="text-on-surface-variant font-label-caps text-label-caps">CATEGORY</p>
+              <p class="text-body-sm text-primary font-semibold truncate">{{ item.categoryName }}</p>
+            </div>
+          </div>
+        </div>
+        @if (isAdmin()) {
+        <div class="border-t border-outline-variant/20 mt-3 pt-3 flex justify-end">
+           <button (click)="onDeleteVehicle(item.id); $event.stopPropagation()" class="px-3 py-1 text-error text-body-sm font-semibold flex items-center gap-1 rounded hover:bg-error-container">
+             <span class="material-symbols-outlined text-[16px]">delete</span>
+             Delete
+           </button>
+        </div>
+        } @else if (isDriver()) {
+        <div class="border-t border-outline-variant/20 mt-3 pt-3 flex justify-end gap-2" (click)="$event.stopPropagation()">
+          <a [routerLink]="['/fuel-logs']" [queryParams]="{ vehicleId: item.id, open: 'true' }"
+            class="h-8 px-3 bg-secondary text-on-secondary hover:brightness-110 text-xs font-bold rounded flex items-center gap-1 transition-all active:scale-95 select-none">
+            <span class="material-symbols-outlined text-xs" data-icon="local_gas_station">local_gas_station</span> Log Fuel
+          </a>
+          <a [routerLink]="['/damage']" [queryParams]="{ vehicleId: item.id }"
+            class="h-8 px-3 bg-error text-on-error hover:brightness-110 text-xs font-bold rounded flex items-center gap-1 transition-all active:scale-95 select-none">
+            <span class="material-symbols-outlined text-xs" data-icon="report_problem">report_problem</span> Damage
+          </a>
+        </div>
+        }
+      </div>
+      }
+      
+      <!-- Mobile Pagination Footer -->
+      <div class="bg-surface-container-low p-4 rounded-xl border border-outline-variant/30 flex flex-col items-center gap-3">
+        <p class="font-body-sm text-body-sm text-on-surface-variant">Showing <span class="font-bold text-primary">{{ filteredVehicles().length ? (currentPage() - 1) * pageSize() + 1 : 0 }} - {{ Math.min(currentPage() * pageSize(), filteredVehicles().length) }}</span> of <span class="font-bold text-primary">{{ filteredVehicles().length }}</span></p>
+        <div class="flex items-center gap-2">
+          <button (click)="changePage(currentPage() - 1)" [disabled]="currentPage() === 1"
+            class="w-8 h-8 flex items-center justify-center rounded border border-outline-variant/30 text-on-surface-variant disabled:opacity-50 disabled:cursor-not-allowed hover:bg-surface-variant">
+            <span class="material-symbols-outlined text-[20px]">chevron_left</span>
+          </button>
+          <span class="text-body-sm font-bold">{{ currentPage() }} / {{ Math.max(1, totalPages()) }}</span>
+          <button (click)="changePage(currentPage() + 1)" [disabled]="currentPage() === totalPages() || totalPages() === 0"
+            class="w-8 h-8 flex items-center justify-center rounded border border-outline-variant/30 text-on-surface-variant disabled:opacity-50 disabled:cursor-not-allowed hover:bg-surface-variant">
+            <span class="material-symbols-outlined text-[20px]">chevron_right</span>
+          </button>
+        </div>
+      </div>
+
+      }
+    </div>
+  </div>
+  }
+</main>
+
+<!-- Floating Action Buttons for Mobile -->
+@if (isAdmin() || isFleetManager()) {
+  <div class="md:hidden fixed right-6 bottom-20 flex flex-col gap-3 items-end z-40">
+    @if (isAdmin()) {
+      <button (click)="openAddCategoryModal()"
+        class="bg-primary text-on-primary w-12 h-12 rounded-full shadow-lg flex items-center justify-center transition-all duration-200 active:scale-90"
+        title="Add Category">
+        <span class="material-symbols-outlined text-[24px]" data-icon="category">category</span>
+      </button>
+    }
+    <button (click)="openAddModelModal()"
+      class="bg-tertiary text-on-tertiary w-12 h-12 rounded-full shadow-lg flex items-center justify-center transition-all duration-200 active:scale-90"
+      title="Add Vehicle Model">
+      <span class="material-symbols-outlined text-[24px]" data-icon="build">build</span>
+    </button>
+    <button (click)="openAddModal()"
+      class="bg-secondary text-on-secondary w-14 h-14 rounded-full shadow-lg flex items-center justify-center transition-all duration-200 active:scale-90"
+      title="Add Vehicle">
+      <span class="material-symbols-outlined text-[28px]" data-icon="add">add</span>
+    </button>
+  </div>
+}
+
+<!-- Add Vehicle Modal Overlay -->
+@if (isAddModalOpen()) {
+<div class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
+  <div
+    class="bg-surface-container-lowest border border-outline-variant/30 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+    <div class="p-6 border-b border-outline-variant/20 flex justify-between items-center bg-surface-container-low">
+      <h3 class="font-title-sm text-title-sm text-primary font-bold">Add New Vehicle</h3>
+      <button (click)="closeAddModal()" class="p-1 hover:bg-surface-variant rounded-full text-on-surface-variant"><span
+          class="material-symbols-outlined" data-icon="close">close</span></button>
+    </div>
+
+    <form [formGroup]="vehicleForm" (ngSubmit)="onSubmit()"
+      class="p-6 space-y-4 overflow-y-auto custom-scrollbar flex-1">
+      <!-- Error Message Banner -->
+      @if (addErrorMessage()) {
+      <div class="p-3 bg-error-container text-on-error-container rounded-lg text-body-sm font-semibold flex items-center gap-2">
+        <span class="material-symbols-outlined text-[18px]" data-icon="error">error</span>
+        <span class="flex-1">{{ addErrorMessage() }}</span>
+      </div>
+      }
+      <!-- Reg No Input -->
+      <div class="space-y-1.5">
+        <label class="block text-body-sm font-bold text-on-surface-variant">Registration Number</label>
+        <input formControlName="regNo"
+          class="w-full h-10 px-3 bg-surface-container-low border border-outline-variant/30 rounded-lg text-body-md focus:ring-2 focus:ring-secondary-container outline-none uppercase"
+          placeholder="e.g. KA01AB1234" type="text" />
+        @if (vehicleForm.get('regNo')?.touched && vehicleForm.get('regNo')?.invalid) {
+        <p class="text-error text-[11px] font-semibold flex items-center gap-1">
+          <span class="material-symbols-outlined text-[14px]">error</span>
+          Please enter a valid registration number (5-15 characters).
+        </p>
+        }
+      </div>
+
+      <!-- Chassis Number Input -->
+      <div class="space-y-1.5">
+        <label class="block text-body-sm font-bold text-on-surface-variant">Chassis Number (VIN)</label>
+        <input formControlName="chassisNumber"
+          class="w-full h-10 px-3 bg-surface-container-low border border-outline-variant/30 rounded-lg text-body-md focus:ring-2 focus:ring-secondary-container outline-none uppercase"
+          placeholder="17 alphanumeric chars" type="text" />
+        @if (vehicleForm.get('chassisNumber')?.touched && vehicleForm.get('chassisNumber')?.invalid) {
+        <p class="text-error text-[11px] font-semibold flex items-center gap-1">
+          <span class="material-symbols-outlined text-[14px]">error</span>
+          Please enter a valid 17-digit alphanumeric chassis number (VIN).
+        </p>
+        }
+      </div>
+
+      <!-- Odometer Reading Input -->
+      <div class="space-y-1.5">
+        <label class="block text-body-sm font-bold text-on-surface-variant">Initial Odometer Reading (km)</label>
+        <input formControlName="currentOdometerReading"
+          class="w-full h-10 px-3 bg-surface-container-low border border-outline-variant/30 rounded-lg text-body-md focus:ring-2 focus:ring-secondary-container outline-none"
+          type="number" />
+        @if (vehicleForm.get('currentOdometerReading')?.touched && vehicleForm.get('currentOdometerReading')?.invalid) {
+        <p class="text-error text-[11px] font-semibold flex items-center gap-1">
+          <span class="material-symbols-outlined text-[14px]">error</span>
+          Initial odometer reading must be a positive number.
+        </p>
+        }
+      </div>
+
+      <!-- Vehicle Model Select Dropdown -->
+      <div class="space-y-1.5">
+        <label class="block text-body-sm font-bold text-on-surface-variant">Vehicle Model</label>
+        <select formControlName="vehicleModelId"
+          class="w-full h-10 px-3 bg-surface-container-low border border-outline-variant/30 rounded-lg text-body-md focus:ring-2 focus:ring-secondary-container outline-none">
+          <option value="">Select a Model</option>
+          @for (model of models(); track model.id) {
+          <option [value]="model.id">{{ model.manufacturer }} {{ model.modelName }} ({{ model.categoryName }})</option>
+          }
+        </select>
+        @if (vehicleForm.get('vehicleModelId')?.touched && vehicleForm.get('vehicleModelId')?.invalid) {
+        <p class="text-error text-[11px] font-semibold flex items-center gap-1">
+          <span class="material-symbols-outlined text-[14px]">error</span>
+          Vehicle model is required.
+        </p>
+        }
+      </div>
+
+      <!-- Route Location Dropdown -->
+      <div class="space-y-1.5">
+        <label class="block text-body-sm font-bold text-on-surface-variant">Initial Route Assignment (Optional)</label>
+        <select formControlName="routeLocationId"
+          [attr.disabled]="isFleetManager() ? true : null"
+          class="w-full h-10 px-3 bg-surface-container-low border border-outline-variant/30 rounded-lg text-body-md focus:ring-2 focus:ring-secondary-container outline-none disabled:opacity-75 disabled:cursor-not-allowed">
+          @if (!isFleetManager()) {
+            <option value="">Not Assigned (Available)</option>
+          }
+          @for (loc of routeLocations(); track loc.id) {
+          <option [value]="loc.id">{{ loc.location }}</option>
+          }
+        </select>
+      </div>
+
+      <!-- Form Actions -->
+      <div class="pt-4 flex justify-end gap-3 border-t border-outline-variant/20 mt-6">
+        <button type="button" (click)="closeAddModal()"
+          class="h-10 px-4 border border-outline-variant/30 hover:bg-surface-container text-on-surface font-label-caps text-label-caps rounded transition-colors">
+          Cancel
+        </button>
+        <button type="submit"
+          class="h-10 px-4 bg-secondary hover:brightness-110 text-on-secondary font-label-caps text-label-caps rounded transition-all active:scale-95">
+          Save Asset
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+}
+
+<!-- Vehicle Details Modal Overlay -->
+@if (isDetailsModalOpen()) {
+<div class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
+  <div
+    class="bg-surface-container-lowest border border-outline-variant/30 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+    <div class="p-6 border-b border-outline-variant/20 flex justify-between items-center bg-surface-container-low">
+      <h3 class="font-title-sm text-title-sm text-primary font-bold">Vehicle Details</h3>
+      <button (click)="closeDetailsModal()" class="p-1 hover:bg-surface-variant rounded-full text-on-surface-variant">
+        <span class="material-symbols-outlined" data-icon="close">close</span>
+      </button>
+    </div>
+
+    <div class="p-6 space-y-4 overflow-y-auto custom-scrollbar flex-1">
+      @if (detailsLoading()) {
+      <div class="flex flex-col items-center justify-center py-12 text-center">
+        <div class="w-10 h-10 rounded-full border-4 border-outline-variant border-t-secondary animate-spin"></div>
+        <p class="text-on-surface-variant font-body-sm mt-3">Fetching vehicle details...</p>
+      </div>
+      } @else if (detailsError()) {
+      <div class="p-4 bg-error-container text-on-error-container rounded-lg text-body-sm font-semibold flex items-center gap-2">
+        <span class="material-symbols-outlined text-[18px]" data-icon="error">error</span>
+        <span class="flex-1">{{ detailsError() }}</span>
+      </div>
+      } @else if (selectedVehicleDetails(); as details) {
+      <div class="space-y-4">
+        <div class="border-b border-outline-variant/10 pb-3">
+          <span class="block text-[11px] font-bold text-on-surface-variant uppercase tracking-wider">Registration Number</span>
+          <span class="text-headline-md font-headline-md text-primary font-bold tracking-tight">{{ details.regNo }}</span>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <span class="block text-[11px] font-bold text-on-surface-variant uppercase tracking-wider">Model Name</span>
+            <span class="text-body-md font-semibold text-primary">{{ details.modelName || 'N/A' }}</span>
+          </div>
+          <div>
+            <span class="block text-[11px] font-bold text-on-surface-variant uppercase tracking-wider">Category</span>
+            <span class="text-body-md font-semibold text-primary">{{ details.categoryname || 'N/A' }}</span>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <span class="block text-[11px] font-bold text-on-surface-variant uppercase tracking-wider">Current Status</span>
+            <div class="mt-1">
+              @if (details.status === 'Active') {
+              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-secondary-fixed text-on-secondary-fixed-variant uppercase inline-flex items-center gap-1">
+                <span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                Available
+              </span>
+              } @else if (details.status === 'InTransit') {
+              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-tertiary-fixed text-on-tertiary-fixed-variant uppercase inline-flex items-center gap-1">
+                <span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span>
+                Assigned
+              </span>
+              } @else if (details.status === 'Maintenance') {
+              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-error-container text-on-error-container uppercase inline-flex items-center gap-1">
+                <span class="w-1.5 h-1.5 rounded-full bg-error animate-pulse"></span>
+                Maintenance
+              </span>
+              } @else {
+              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-outline-variant text-on-surface-variant uppercase inline-flex items-center gap-1">
+                <span class="w-1.5 h-1.5 rounded-full bg-on-surface-variant"></span>
+                Inactive
+              </span>
+              }
+            </div>
+          </div>
+          <div>
+            <span class="block text-[11px] font-bold text-on-surface-variant uppercase tracking-wider">Last Odometer</span>
+            <span class="text-body-md font-semibold text-primary">{{ details.currentOdometerReading | number }} km</span>
+          </div>
+        </div>
+        <div class="grid grid-cols-1 gap-4 border-t border-outline-variant/10 pt-3">
+          <div>
+            <span class="block text-[11px] font-bold text-on-surface-variant uppercase tracking-wider">Chassis Number (VIN)</span>
+            <span class="text-body-md font-semibold text-primary tracking-wider">{{ details.chassisNumber }}</span>
+          </div>
+          <div>
+            <span class="block text-[11px] font-bold text-on-surface-variant uppercase tracking-wider">Route Assignment</span>
+            <span class="text-body-md font-semibold text-primary">{{ details.routename || 'Not Assigned' }}</span>
+          </div>
+        </div>
+        <div class="border-t border-outline-variant/10 pt-3 text-[10px] text-on-surface-variant/70 font-mono">
+          <span>System ID: {{ details.id }}</span>
+        </div>
+      </div>
+      }
+    </div>
+
+    <div class="p-4 flex justify-end border-t border-outline-variant/20 bg-surface-container-low">
+      <button type="button" (click)="closeDetailsModal()"
+        class="h-10 px-4 bg-secondary hover:brightness-110 text-on-secondary font-label-caps text-label-caps rounded transition-all active:scale-95">
+        Close
+      </button>
+    </div>
+  </div>
+</div>
+}
+
+<!-- Add Vehicle Model Modal Overlay -->
+@if (isModelModalOpen()) {
+<div class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
+  <div
+    class="bg-surface-container-lowest border border-outline-variant/30 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+    <div class="p-6 border-b border-outline-variant/20 flex justify-between items-center bg-surface-container-low">
+      <h3 class="font-title-sm text-title-sm text-primary font-bold">Add Vehicle Model</h3>
+      <button (click)="closeAddModelModal()" class="p-1 hover:bg-surface-variant rounded-full text-on-surface-variant">
+        <span class="material-symbols-outlined" data-icon="close">close</span>
+      </button>
+    </div>
+
+    <form [formGroup]="modelForm" (ngSubmit)="onSubmitModel()"
+      class="p-6 space-y-4 overflow-y-auto custom-scrollbar flex-1">
+      
+      <!-- Error Message Banner -->
+      @if (modelErrorMessage()) {
+      <div class="p-3 bg-error-container text-on-error-container rounded-lg text-body-sm font-semibold flex items-center gap-2">
+        <span class="material-symbols-outlined text-[18px]" data-icon="error">error</span>
+        <span class="flex-1">{{ modelErrorMessage() }}</span>
+      </div>
+      }
+
+      <!-- Manufacturer Input -->
+      <div class="space-y-1.5">
+        <label class="block text-body-sm font-bold text-on-surface-variant">Manufacturer</label>
+        <input formControlName="manufacturer"
+          class="w-full h-10 px-3 bg-surface-container-low border border-outline-variant/30 rounded-lg text-body-md focus:ring-2 focus:ring-secondary-container outline-none"
+          placeholder="e.g. Toyota" type="text" />
+        @if (modelForm.get('manufacturer')?.touched && modelForm.get('manufacturer')?.invalid) {
+        <p class="text-error text-[11px] font-semibold flex items-center gap-1">
+          <span class="material-symbols-outlined text-[14px]">error</span>
+          Manufacturer is required.
+        </p>
+        }
+      </div>
+
+      <!-- Model Name Input -->
+      <div class="space-y-1.5">
+        <label class="block text-body-sm font-bold text-on-surface-variant">Model Name</label>
+        <input formControlName="modelName"
+          class="w-full h-10 px-3 bg-surface-container-low border border-outline-variant/30 rounded-lg text-body-md focus:ring-2 focus:ring-secondary-container outline-none"
+          placeholder="e.g. Corolla" type="text" />
+        @if (modelForm.get('modelName')?.touched && modelForm.get('modelName')?.invalid) {
+        <p class="text-error text-[11px] font-semibold flex items-center gap-1">
+          <span class="material-symbols-outlined text-[14px]">error</span>
+          Model name is required.
+        </p>
+        }
+      </div>
+
+      <!-- Expected Lifetime Years Input -->
+      <div class="space-y-1.5">
+        <label class="block text-body-sm font-bold text-on-surface-variant">Expected Lifetime (Years)</label>
+        <input formControlName="expectedLifeTimeYears"
+          class="w-full h-10 px-3 bg-surface-container-low border border-outline-variant/30 rounded-lg text-body-md focus:ring-2 focus:ring-secondary-container outline-none"
+          type="number" />
+        @if (modelForm.get('expectedLifeTimeYears')?.touched && modelForm.get('expectedLifeTimeYears')?.invalid) {
+        <p class="text-error text-[11px] font-semibold flex items-center gap-1">
+          <span class="material-symbols-outlined text-[14px]">error</span>
+          Please enter a valid lifetime (0 to 30 years).
+        </p>
+        }
+      </div>
+
+      <!-- Expected Lifetime Kilometers Input -->
+      <div class="space-y-1.5">
+        <label class="block text-body-sm font-bold text-on-surface-variant">Expected Lifetime (km)</label>
+        <input formControlName="expectedLifeTimeKms"
+          class="w-full h-10 px-3 bg-surface-container-low border border-outline-variant/30 rounded-lg text-body-md focus:ring-2 focus:ring-secondary-container outline-none"
+          type="number" />
+        @if (modelForm.get('expectedLifeTimeKms')?.touched && modelForm.get('expectedLifeTimeKms')?.invalid) {
+        <p class="text-error text-[11px] font-semibold flex items-center gap-1">
+          <span class="material-symbols-outlined text-[14px]">error</span>
+          Please enter a valid positive kilometer reading.
+        </p>
+        }
+      </div>
+
+      <!-- Category Select Dropdown -->
+      <div class="space-y-1.5">
+        <label class="block text-body-sm font-bold text-on-surface-variant">Category</label>
+        <select formControlName="categoryId"
+          class="w-full h-10 px-3 bg-surface-container-low border border-outline-variant/30 rounded-lg text-body-md focus:ring-2 focus:ring-secondary-container outline-none">
+          <option value="">Select a Category</option>
+          @for (cat of allCategories(); track cat.id) {
+          <option [value]="cat.id">{{ cat.name }}</option>
+          }
+        </select>
+        @if (modelForm.get('categoryId')?.touched && modelForm.get('categoryId')?.invalid) {
+        <p class="text-error text-[11px] font-semibold flex items-center gap-1">
+          <span class="material-symbols-outlined text-[14px]">error</span>
+          Category is required.
+        </p>
+        }
+      </div>
+
+      <!-- Form Actions -->
+      <div class="pt-4 flex justify-end gap-3 border-t border-outline-variant/20 mt-6">
+        <button type="button" (click)="closeAddModelModal()"
+          class="h-10 px-4 border border-outline-variant/30 hover:bg-surface-container text-on-surface font-label-caps text-label-caps rounded transition-colors">
+          Cancel
+        </button>
+        <button type="submit"
+          class="h-10 px-4 bg-secondary hover:brightness-110 text-on-secondary font-label-caps text-label-caps rounded transition-all active:scale-95">
+          Save Model
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+}
+
+<!-- Add Vehicle Category Modal Overlay -->
+@if (isCategoryModalOpen()) {
+<div class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
+  <div
+    class="bg-surface-container-lowest border border-outline-variant/30 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+    <div class="p-6 border-b border-outline-variant/20 flex justify-between items-center bg-surface-container-low">
+      <h3 class="font-title-sm text-title-sm text-primary font-bold">Add Category</h3>
+      <button (click)="closeAddCategoryModal()" class="p-1 hover:bg-surface-variant rounded-full text-on-surface-variant">
+        <span class="material-symbols-outlined" data-icon="close">close</span>
+      </button>
+    </div>
+
+    <form [formGroup]="categoryForm" (ngSubmit)="onSubmitCategory()"
+      class="p-6 space-y-4 overflow-y-auto custom-scrollbar flex-1">
+      
+      <!-- Error Message Banner -->
+      @if (categoryErrorMessage()) {
+      <div class="p-3 bg-error-container text-on-error-container rounded-lg text-body-sm font-semibold flex items-center gap-2">
+        <span class="material-symbols-outlined text-[18px]" data-icon="error">error</span>
+        <span class="flex-1">{{ categoryErrorMessage() }}</span>
+      </div>
+      }
+
+      <!-- Name Input -->
+      <div class="space-y-1.5">
+        <label class="block text-body-sm font-bold text-on-surface-variant">Category Name</label>
+        <input formControlName="name"
+          class="w-full h-10 px-3 bg-surface-container-low border border-outline-variant/30 rounded-lg text-body-md focus:ring-2 focus:ring-secondary-container outline-none"
+          placeholder="e.g. SUV" type="text" />
+        @if (categoryForm.get('name')?.touched && categoryForm.get('name')?.invalid) {
+        <p class="text-error text-[11px] font-semibold flex items-center gap-1">
+          <span class="material-symbols-outlined text-[14px]">error</span>
+          Category name is required.
+        </p>
+        }
+      </div>
+
+      <!-- Fuel Efficiency Threshold Input -->
+      <div class="space-y-1.5">
+        <label class="block text-body-sm font-bold text-on-surface-variant">Fuel Efficiency Threshold (km/L)</label>
+        <input formControlName="fuelEfficiencyThreshold"
+          class="w-full h-10 px-3 bg-surface-container-low border border-outline-variant/30 rounded-lg text-body-md focus:ring-2 focus:ring-secondary-container outline-none"
+          type="number" step="0.1" />
+        @if (categoryForm.get('fuelEfficiencyThreshold')?.touched && categoryForm.get('fuelEfficiencyThreshold')?.invalid) {
+        <p class="text-error text-[11px] font-semibold flex items-center gap-1">
+          <span class="material-symbols-outlined text-[14px]">error</span>
+          Threshold must be between 0 and 120.
+        </p>
+        }
+      </div>
+
+      <!-- Form Actions -->
+      <div class="pt-4 flex justify-end gap-3 border-t border-outline-variant/20 mt-6">
+        <button type="button" (click)="closeAddCategoryModal()"
+          class="h-10 px-4 border border-outline-variant/30 hover:bg-surface-container text-on-surface font-label-caps text-label-caps rounded transition-colors">
+          Cancel
+        </button>
+        <button type="submit"
+          class="h-10 px-4 bg-secondary hover:brightness-110 text-on-secondary font-label-caps text-label-caps rounded transition-all active:scale-95">
+          Save Category
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+}
