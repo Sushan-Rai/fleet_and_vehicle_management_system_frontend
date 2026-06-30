@@ -209,7 +209,7 @@
 
         <!-- Form Submission Button -->
         <div class="flex justify-end pt-2">
-          <button type="submit" [disabled]="alertForm.invalid"
+          <button type="submit" [disabled]="alertForm.invalid || isSubmitting()"
             class="h-10 px-6 bg-secondary hover:brightness-110 disabled:opacity-50 text-on-secondary font-label-caps text-label-caps rounded transition-all active:scale-95 flex items-center gap-2">
             <span class="material-symbols-outlined text-[18px]">save</span>
             Save Alert Preferences

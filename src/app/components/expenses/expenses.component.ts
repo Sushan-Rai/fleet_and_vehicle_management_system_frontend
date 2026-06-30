@@ -46,6 +46,7 @@ export class ExpensesComponent implements OnInit {
   // Add Expense Modal States
   public readonly isAddModalOpen = signal<boolean>(false);
   public readonly addErrorMessage = signal<string>('');
+  public readonly isAddLoading = signal<boolean>(false);
 
   // Details Modal States
   public readonly isDetailsModalOpen = signal<boolean>(false);
@@ -165,6 +166,7 @@ export class ExpensesComponent implements OnInit {
       return;
     }
 
+    this.isAddLoading.set(true);
     this.addErrorMessage.set('');
     const formVal = this.expenseForm.value;
     const request: VehicleExpenseRequest = {
@@ -178,11 +180,13 @@ export class ExpensesComponent implements OnInit {
 
     this.expenseService.createExpense(request).subscribe({
       next: () => {
+        this.isAddLoading.set(false);
         this.closeAddModal();
         this.pageNumber.set(1);
         this.loadExpenses();
       },
       error: (err) => {
+        this.isAddLoading.set(false);
         this.addErrorMessage.set(this.extractErrorMessage(err, 'Failed to record expense.'));
       }
     });

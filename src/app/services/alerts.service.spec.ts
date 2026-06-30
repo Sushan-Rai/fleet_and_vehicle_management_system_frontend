@@ -14,7 +14,8 @@ describe('AlertsService', () => {
   beforeEach(() => {
     httpClientMock = {
       get: vi.fn().mockReturnValue(of([])),
-      put: vi.fn().mockReturnValue(of({}))
+      put: vi.fn().mockReturnValue(of({})),
+      patch: vi.fn().mockReturnValue(of({}))
     };
 
     authServiceMock = {

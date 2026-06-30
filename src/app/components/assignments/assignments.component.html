@@ -417,8 +417,8 @@
           class="h-10 px-4 border border-outline-variant/30 hover:bg-surface-container text-on-surface font-label-caps text-label-caps rounded transition-colors">
           Cancel
         </button>
-        <button type="submit"
-          class="h-10 px-4 bg-secondary hover:brightness-110 text-on-secondary font-label-caps text-label-caps rounded transition-all active:scale-95">
+        <button type="submit" [disabled]="loading()"
+          class="h-10 px-4 bg-secondary hover:brightness-110 text-on-secondary font-label-caps text-label-caps rounded transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed">
           Publish Dispatch
         </button>
       </div>

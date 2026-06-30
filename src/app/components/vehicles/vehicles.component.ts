@@ -48,6 +48,8 @@ export class VehiclesComponent implements OnInit, OnDestroy {
   public readonly isAddModalOpen = signal<boolean>(false);
   public readonly isModelModalOpen = signal<boolean>(false);
   public readonly isCategoryModalOpen = signal<boolean>(false);
+  public readonly isModelSubmitting = signal<boolean>(false);
+  public readonly isCategorySubmitting = signal<boolean>(false);
   public readonly searchTerm = toSignal(this.store.select(selectSearchTerm), { initialValue: '' });
   public readonly selectedStatus = toSignal(this.store.select(selectSelectedStatus), { initialValue: '' });
   public readonly selectedCategory = toSignal(this.store.select(selectSelectedCategory), { initialValue: '' });
@@ -387,6 +389,7 @@ export class VehiclesComponent implements OnInit, OnDestroy {
       return;
     }
 
+    this.isModelSubmitting.set(true);
     this.modelErrorMessage.set('');
     const val = this.modelForm.value;
     const request: VehicleModelRequest = {
@@ -399,10 +402,12 @@ export class VehiclesComponent implements OnInit, OnDestroy {
 
     this.vehicleService.createVehicleModel(request).subscribe({
       next: () => {
+        this.isModelSubmitting.set(false);
         this.closeAddModelModal();
         this.store.dispatch(VehiclesActions.loadVehicleModels());
       },
       error: (err) => {
+        this.isModelSubmitting.set(false);
         this.modelErrorMessage.set(this.extractErrorMessage(err, 'Failed to create vehicle model. Please try again.'));
       }
     });
@@ -417,6 +422,7 @@ export class VehiclesComponent implements OnInit, OnDestroy {
       return;
     }
 
+    this.isCategorySubmitting.set(true);
     this.categoryErrorMessage.set('');
     const val = this.categoryForm.value;
     const request: VehicleCategoryRequest = {
@@ -426,10 +432,12 @@ export class VehiclesComponent implements OnInit, OnDestroy {
 
     this.vehicleService.createVehicleCategory(request).subscribe({
       next: () => {
+        this.isCategorySubmitting.set(false);
         this.closeAddCategoryModal();
         this.loadCategories();
       },
       error: (err) => {
+        this.isCategorySubmitting.set(false);
         this.categoryErrorMessage.set(this.extractErrorMessage(err, 'Failed to create category. Please try again.'));
       }
     });

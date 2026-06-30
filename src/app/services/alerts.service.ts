@@ -53,7 +53,7 @@ export class AlertsService {
    */
   public markAsRead(id: string): void {
     const apiUrl = this.authService.apiUrl();
-    this.http.put(`${apiUrl}/Alert/${id}/read`, {}).subscribe({
+    this.http.patch(`${apiUrl}/Alert/${id}/read`, {}).subscribe({
       next: () => {
         this.alertsSignal.update(alerts =>
           alerts.map(a => a.id === id ? { ...a, isRead: true } : a)
@@ -70,7 +70,7 @@ export class AlertsService {
    */
   public markAllAsRead(): void {
     const apiUrl = this.authService.apiUrl();
-    this.http.put(`${apiUrl}/Alert/mark-all-read`, {}).subscribe({
+    this.http.patch(`${apiUrl}/Alert/mark-all-read`, {}).subscribe({
       next: () => {
         this.alertsSignal.update(alerts =>
           alerts.map(a => ({ ...a, isRead: true }))

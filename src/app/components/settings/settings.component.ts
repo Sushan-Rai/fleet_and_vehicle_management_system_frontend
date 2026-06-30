@@ -21,6 +21,7 @@ export class SettingsComponent implements OnInit {
 
   // Component states
   public readonly isLoading = signal<boolean>(true);
+  public readonly isSubmitting = signal<boolean>(false);
   public readonly error = signal<string>('');
   public readonly successMessage = signal<string>('');
   public readonly approvalsLoading = signal<boolean>(false);
@@ -140,6 +141,7 @@ export class SettingsComponent implements OnInit {
 
     this.successMessage.set('');
     this.error.set('');
+    this.isSubmitting.set(true);
 
     const formValues = this.alertForm.value;
     const request = {
@@ -156,10 +158,12 @@ export class SettingsComponent implements OnInit {
 
     this.settingsService.updateAlertPreferences(request).subscribe({
       next: () => {
+        this.isSubmitting.set(false);
         this.successMessage.set('Alert preferences updated successfully.');
         setTimeout(() => this.successMessage.set(''), 4000);
       },
       error: (err) => {
+        this.isSubmitting.set(false);
         this.error.set('Failed to update alert preferences. Please try again.');
       }
     });

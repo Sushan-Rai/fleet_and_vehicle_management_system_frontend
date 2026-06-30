@@ -43,7 +43,7 @@ export class AssignmentsService {
    */
   public acceptAssignment(request: AcceptAssignmentRequest): Observable<VehicleAssignment> {
     const apiUrl = this.authService.apiUrl();
-    return this.http.put<VehicleAssignment>(`${apiUrl}/VehicleAssignment/accept`, request);
+    return this.http.patch<VehicleAssignment>(`${apiUrl}/VehicleAssignment/accept`, request);
   }
 
   /**
@@ -51,7 +51,7 @@ export class AssignmentsService {
    */
   public rejectAssignment(request: AcceptAssignmentRequest): Observable<VehicleAssignment> {
     const apiUrl = this.authService.apiUrl();
-    return this.http.put<VehicleAssignment>(`${apiUrl}/VehicleAssignment/reject`, request);
+    return this.http.patch<VehicleAssignment>(`${apiUrl}/VehicleAssignment/reject`, request);
   }
 
   /**
@@ -59,7 +59,7 @@ export class AssignmentsService {
    */
   public arriveAssignment(request: AcceptAssignmentRequest): Observable<VehicleAssignment> {
     const apiUrl = this.authService.apiUrl();
-    return this.http.put<VehicleAssignment>(`${apiUrl}/VehicleAssignment/arrive`, request);
+    return this.http.patch<VehicleAssignment>(`${apiUrl}/VehicleAssignment/arrive`, request);
   }
 
   /**
