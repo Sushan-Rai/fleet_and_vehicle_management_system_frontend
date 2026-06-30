@@ -53,7 +53,13 @@ describe('VehiclesComponent', () => {
       name: req.name,
       fuelEfficiencyThreshold: req.fuelEfficiencyThreshold
     }),
-    getVehicleById: () => of({})
+    getVehicleById: () => of({}),
+    getVehicleCount: (status?: string) => {
+      if (status === 'Active') return of(0);
+      if (status === 'InTransit') return of(1);
+      if (status === 'Maintenance') return of(0);
+      return of(1);
+    }
   };
 
   beforeEach(async () => {
@@ -104,7 +110,7 @@ describe('VehiclesComponent', () => {
     localFixture.detectChanges();
 
     expect(localComponent).toBeTruthy();
-    expect(localDispatchSpy).toHaveBeenCalledWith(VehiclesActions.loadVehicles({ filters: { PageSize: 1000 } }));
+    expect(localDispatchSpy).toHaveBeenCalledWith(VehiclesActions.loadVehicles({ filters: { PageNumber: 1, PageSize: 10 } }));
     expect(localDispatchSpy).toHaveBeenCalledWith(VehiclesActions.loadVehicleModels());
 
     store.resetSelectors();

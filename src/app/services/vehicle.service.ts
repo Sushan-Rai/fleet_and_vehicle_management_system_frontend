@@ -99,6 +99,16 @@ export class VehicleService {
   }
 
   /**
+   * Fetches vehicle count, optionally filtered by status
+   */
+  public getVehicleCount(status?: string): Observable<number> {
+    const apiUrl = this.authService.apiUrl();
+    let params = new HttpParams();
+    if (status) params = params.set('Status', status);
+    return this.http.get<number>(`${apiUrl}/Vehicle/count`, { params });
+  }
+
+  /**
    * Deletes a vehicle by ID
    */
   public deleteVehicle(id: string): Observable<any> {

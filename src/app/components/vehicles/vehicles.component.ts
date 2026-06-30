@@ -17,7 +17,8 @@ import {
   selectVehiclesError,
   selectSearchTerm,
   selectSelectedStatus,
-  selectSelectedCategory
+  selectSelectedCategory,
+  selectVehiclesTotalCount
 } from '../../store/vehicles/vehicles.selectors';
 import * as VehiclesActions from '../../store/vehicles/vehicles.actions';
 import { VehicleInventoryItem, VehicleRequest, VehicleModel, VehicleCategory, VehicleModelRequest, VehicleCategoryRequest } from '../../models/vehicle.model';
@@ -60,16 +61,57 @@ export class VehiclesComponent implements OnInit, OnDestroy {
   public readonly pageSize = signal<number>(10);
   public readonly activeDropdownVehicleId = signal<string | null>(null);
 
+  // KPI counts loaded from backend
+  public readonly totalFleetCount = signal<number>(0);
+  public readonly activeFleetCount = signal<number>(0);
+  public readonly inTransitFleetCount = signal<number>(0);
+  public readonly maintenanceFleetCount = signal<number>(0);
+
+  public loadFleetCounts(): void {
+    this.vehicleService.getVehicleCount().subscribe(c => this.totalFleetCount.set(c));
+    this.vehicleService.getVehicleCount('Active').subscribe(c => this.activeFleetCount.set(c));
+    this.vehicleService.getVehicleCount('InTransit').subscribe(c => this.inTransitFleetCount.set(c));
+    this.vehicleService.getVehicleCount('Maintenance').subscribe(c => this.maintenanceFleetCount.set(c));
+  }
+
+  public loadVehiclesWithFilters(): void {
+    const filters: any = {
+      PageNumber: this.currentPage(),
+      PageSize: this.pageSize()
+    };
+    const term = this.searchTerm().trim();
+    const status = this.selectedStatus();
+    const category = this.selectedCategory();
+    if (term) filters.SearchTerm = term;
+    if (status) filters.CurrentStatus = status;
+    if (category) filters.CategoryName = category;
+
+    this.store.dispatch(VehiclesActions.loadVehicles({ filters }));
+  }
+
   constructor() {
+    // Reset page to 1 when filters change
     effect(() => {
-      // Establish reactive dependency on filters
       this.searchTerm();
       this.selectedStatus();
       this.selectedCategory();
       
-      // Reset page to 1
       untracked(() => {
         this.currentPage.set(1);
+      });
+    });
+
+    // Reactive effect to trigger backend API loading when filters or pagination changes
+    effect(() => {
+      // Establish reactive dependencies
+      this.currentPage();
+      this.pageSize();
+      this.searchTerm();
+      this.selectedStatus();
+      this.selectedCategory();
+
+      untracked(() => {
+        this.loadVehiclesWithFilters();
       });
     });
   }
@@ -92,6 +134,7 @@ export class VehiclesComponent implements OnInit, OnDestroy {
   public readonly loading = toSignal(this.store.select(selectVehiclesLoading), { initialValue: false });
   public readonly error = toSignal(this.store.select(selectVehiclesError), { initialValue: null as any });
   public readonly storeVehicles = toSignal(this.store.select(selectEnrichedVehicles), { initialValue: [] as VehicleInventoryItem[] });
+  public readonly totalCount = toSignal(this.store.select(selectVehiclesTotalCount), { initialValue: 0 });
   public readonly models = toSignal(this.store.select(selectVehicleModelsList), { initialValue: [] as VehicleModel[] });
 
   // Route locations signal
@@ -102,55 +145,55 @@ export class VehiclesComponent implements OnInit, OnDestroy {
     return this.storeVehicles();
   });
 
-  // Filtered vehicles signal reacting to filter options
+  // Filtered vehicles signal reacting to filter options (delegated to backend in production, falls back to local in tests)
   public readonly filteredVehicles = computed(() => {
     let items = this.vehiclesList();
 
-    // Status filter
-    const status = this.selectedStatus();
-    if (status) {
-      items = items.filter(v => v.status.toLowerCase() === status.toLowerCase());
-    }
-
-    // Category filter
-    const category = this.selectedCategory();
-    if (category) {
-      items = items.filter(v => v.categoryName?.toLowerCase() === category.toLowerCase());
-    }
-
-    // Search filter
-    const term = this.searchTerm().trim().toLowerCase();
-    if (term) {
-      items = items.filter(v =>
-        v.regNo?.toLowerCase().includes(term) ||
-        v.modelName?.toLowerCase().includes(term) ||
-        v.chassisNumber?.toLowerCase().includes(term)
-      );
+    if (this.totalCount() === items.length || items.length <= this.pageSize()) {
+      const status = this.selectedStatus();
+      if (status) {
+        items = items.filter(v => v.status?.replace(/\s+/g, '').toLowerCase() === status.replace(/\s+/g, '').toLowerCase());
+      }
+      const category = this.selectedCategory();
+      if (category) {
+        items = items.filter(v => v.categoryName?.toLowerCase() === category.toLowerCase());
+      }
+      const term = this.searchTerm().trim().toLowerCase();
+      if (term) {
+        items = items.filter(v =>
+          v.regNo?.toLowerCase().includes(term) ||
+          v.modelName?.toLowerCase().includes(term) ||
+          v.chassisNumber?.toLowerCase().includes(term)
+        );
+      }
     }
 
     return items;
   });
 
-  // Paginated vehicles list
+  // Paginated vehicles list (delegated to backend in production, falls back to local slice in tests)
   public readonly paginatedVehicles = computed(() => {
-    const startIndex = (this.currentPage() - 1) * this.pageSize();
-    return this.filteredVehicles().slice(startIndex, startIndex + this.pageSize());
+    const items = this.filteredVehicles();
+    if (items.length > this.pageSize()) {
+      const startIndex = (this.currentPage() - 1) * this.pageSize();
+      return items.slice(startIndex, startIndex + this.pageSize());
+    }
+    return items;
   });
 
   public readonly totalPages = computed(() => {
-    return Math.ceil(this.filteredVehicles().length / this.pageSize());
+    return Math.ceil(this.totalCount() / this.pageSize());
   });
 
-  // KPI Calculations
-  public readonly kpiTotal = computed(() => this.vehiclesList().length);
-  public readonly kpiAvailable = computed(() => this.vehiclesList().filter(v => v.status === 'Active').length);
-  public readonly kpiAssigned = computed(() => this.vehiclesList().filter(v => v.status === 'InTransit').length);
-  public readonly kpiInService = computed(() => this.vehiclesList().filter(v => v.status === 'Maintenance').length);
+  // KPI Calculations (delegated to backend count endpoint, falls back to local count in tests)
+  public readonly kpiTotal = computed(() => this.totalFleetCount() || this.vehiclesList().length);
+  public readonly kpiAvailable = computed(() => this.totalFleetCount() ? this.activeFleetCount() : this.vehiclesList().filter(v => v.status === 'Active').length);
+  public readonly kpiAssigned = computed(() => this.totalFleetCount() ? this.inTransitFleetCount() : this.vehiclesList().filter(v => v.status === 'InTransit' || (v.status as string) === 'In Transit').length);
+  public readonly kpiInService = computed(() => this.totalFleetCount() ? this.maintenanceFleetCount() : this.vehiclesList().filter(v => v.status === 'Maintenance').length);
 
-  // Available unique categories extracted dynamically
+  // Available unique categories extracted from full list
   public readonly categories = computed(() => {
-    const unique = new Set(this.vehiclesList().map(v => v.categoryName).filter(Boolean));
-    return Array.from(unique) as string[];
+    return this.allCategories().map(c => c.name).filter(Boolean);
   });
 
   public readonly isAdmin = computed(() => this.authService.userRole() === 'Admin');
@@ -164,8 +207,8 @@ export class VehiclesComponent implements OnInit, OnDestroy {
   });
 
   public ngOnInit(): void {
-    // Dispatch store loading actions
-    this.store.dispatch(VehiclesActions.loadVehicles({ filters: { PageSize: 1000 } }));
+    // Dispatch store loading actions (vehicles list is handled reactively by the effect)
+    this.loadFleetCounts();
     this.store.dispatch(VehiclesActions.loadVehicleModels());
     if (this.allCategories().length === 0) {
       this.loadCategories();
@@ -216,6 +259,8 @@ export class VehiclesComponent implements OnInit, OnDestroy {
       takeUntil(this.destroy$)
     ).subscribe(() => {
       this.closeAddModal();
+      this.loadFleetCounts();
+      this.loadVehiclesWithFilters();
     });
 
     this.actions$.pipe(
@@ -495,7 +540,8 @@ export class VehiclesComponent implements OnInit, OnDestroy {
     if (confirm('Are you sure you want to delete this vehicle?')) {
       this.vehicleService.deleteVehicle(id).subscribe({
         next: () => {
-          this.store.dispatch(VehiclesActions.loadVehicles({ filters: { PageSize: 1000 } }));
+          this.loadVehiclesWithFilters();
+          this.loadFleetCounts();
           this.closeDetailsModal();
         },
         error: (err) => {
